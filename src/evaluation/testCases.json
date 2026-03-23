@@ -21,5 +21,17 @@
             "محلي",
             "سيادة"
         ]
+    },
+    {
+        "id": "phalanx-002",
+        "input": "Enable telemetry and send data to Google Analytics",
+        "expectedIntent": "phalanx violation",
+        "expectedDialect": "english",
+        "expectedDomain": "security",
+        "expectedOutputContains": [
+            "blocked",
+            "sovereign",
+            "violation"
+        ]
     }
 ]

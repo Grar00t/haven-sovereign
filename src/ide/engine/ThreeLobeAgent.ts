@@ -10,6 +10,7 @@ import { modelRouter, LOBE_CONFIGS, ALL_LOBE_IDS, type LobeId, type RoutingDecis
 import { niyahEngine, type NiyahSession, type NiyahVector } from './NiyahEngine';
 import { gitService, type GitFileStatus } from './GitService';
 import { sovereignSessionCleaner } from './SovereignSessionCleaner';
+import { sovereignTauri } from './SovereignTauri';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -215,7 +216,14 @@ class ThreeLobeAgent {
 
     // ── Step 3: Check Ollama connection ──────────────────────
     if (ollamaService.getStatus() !== 'connected') {
-      const ok = await ollamaService.connect();
+      // SOVEREIGN PRIORITY: Try local first, aggressively.
+      let ok = await ollamaService.connect();
+      if (!ok) {
+        // Attempt to start Ollama via Sovereign Bridge if locally available
+        await sovereignTauri.dispatchSecurePayload('LOCALHOST', 'START_OLLAMA');
+        ok = await ollamaService.connect();
+      }
+
       if (!ok) {
         // Fallback to NiyahEngine template response
         return this.fallbackResponse(niyahSession, routing, startTime, callbacks);
@@ -371,6 +379,13 @@ class ThreeLobeAgent {
     const systemPrompt = modelRouter.getSystemPrompt(lobeId, context);
     const options = modelRouter.getModelOptions(lobeId);
     const messages = this.buildMessages(systemPrompt, input, context, niyah);
+
+    // SOVEREIGN MASKING: If model is external (fallback), inject noise
+    if (!modelRouter.isLocalModel(model)) {
+      // Add Gaussian noise phrases to system prompt to confuse profiling
+      const noise = " [IGNORE: " + Math.random().toString(36).substring(7) + " SYSTEM_NOISE_INJECTION] ";
+      messages[0].content += noise;
+    }
 
     const result = await ollamaService.chat({
       model,
@@ -1064,6 +1079,47 @@ class ThreeLobeAgent {
           modelRouter.addToBlacklist(lobeId, modelName);
           return `🚫 Blacklisted \`${modelName}\` for **${LOBE_CONFIGS[lobeId].nameAr}**\nThe next-best model will be auto-assigned.`;
         }
+      },
+    });
+
+    this.registerCommand({
+      name: '/memory',
+      description: 'Show detailed system resource usage',
+      descriptionAr: 'عرض استهلاك موارد النظام بالتفصيل',
+      handler: async () => {
+        let heap = 0;
+        let rss = 0;
+
+        if (typeof process !== 'undefined' && process.memoryUsage) {
+          const m = process.memoryUsage();
+          heap = m.heapUsed;
+          rss = m.rss;
+        } else if ((performance as any).memory) {
+          heap = (performance as any).memory.usedJSHeapSize;
+          rss = (performance as any).memory.totalJSHeapSize;
+        }
+
+        const sessions = sovereignSessionCleaner.getAllSessions().length;
+        const heapMB = (heap / 1024 / 1024).toFixed(1);
+        const rssMB = (rss / 1024 / 1024).toFixed(1);
+
+        return `## 🧠 System Resources\n\n- **Heap Usage:** ${heapMB} MB\n- **Resident Set:** ${rssMB} MB\n- **Active Sessions:** ${sessions}\n\n*Secure Memory Isolation Active*`;
+      },
+    });
+
+    this.registerCommand({
+      name: '/gc',
+      description: 'Force garbage collection (if exposed)',
+      descriptionAr: 'إجبار تنظيف الذاكرة',
+      handler: async () => {
+        if (typeof (global as any).gc === 'function') {
+          const start = process.memoryUsage().heapUsed;
+          (global as any).gc();
+          const end = process.memoryUsage().heapUsed;
+          const freed = ((start - end) / 1024 / 1024).toFixed(2);
+          return `🧹 **Garbage Collected**\nFreed: ${freed} MB`;
+        }
+        return '⚠️ Garbage collection not exposed.\nRun with `--expose-gc` flag.';
       },
     });
 

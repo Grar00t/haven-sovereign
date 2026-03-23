@@ -10,7 +10,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![License](https://img.shields.io/badge/License-Proprietary-sovereign--gold)]()
+[![License](https://img.shields.io/badge/License-AGPL%20v3-sovereign--gold)]()
 [![PDPL](https://img.shields.io/badge/Compliant-PDPL%20%7C%20NCA--ECC-22c55e)]()
 
 </div>
@@ -160,9 +160,9 @@ This project exists to prove one thing: **Saudi Arabia does not need Silicon Val
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/graxos/OFFICIAL.git
-cd OFFICIAL
+# Clone the sovereign repository
+git clone https://github.com/Grar00t/haven-sovereign.git
+cd haven-sovereign
 
 # Install dependencies
 npm install
@@ -329,7 +329,8 @@ HAVEN/
 
 ## License
 
-**Proprietary** — All rights reserved.
+**AGPL-3.0** — Open Source Sovereign Software.
+See LICENSE for details.
 Built in the Kingdom of Saudi Arabia. Copyright © 2024–2026 KHAWRIZM (Sulaiman Alshammari).
 
 ---

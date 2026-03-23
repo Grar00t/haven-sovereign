@@ -8,7 +8,9 @@ coverage/
 !.env.example
 
 .vercel
-postman/
+.postman/
+*.postman_collection.json
+*.postman_environment.json
 .env
 .env.local
 node_modules/
@@ -24,8 +26,3 @@ dist/
 .next/
 *.pem
 *.key
-.vscode/
-haven-electron/
-haven-tauri/
-*.postman_test_run.json
-package.json.bak

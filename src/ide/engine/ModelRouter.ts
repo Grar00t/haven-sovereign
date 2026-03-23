@@ -592,6 +592,11 @@ class ModelRouter {
     return Object.values(this.assignments).some(m => m !== null);
   }
 
+  /** Check if a model is running locally (sovereign) or via external API */
+  isLocalModel(_modelName: string): boolean {
+    return ollamaService.isLocalEndpoint();
+  }
+
   private emptyLobeModelInfo(): LobeModelInfo {
     return {
       current: null,

@@ -1,0 +1,36 @@
+{
+  "name": "HAVEN | THE SOVEREIGN ALGORITHM",
+  "version": "5.0.0",
+  "description": "Saudi Arabia's first sovereign AI development environment. Zero telemetry. Local-first AI. Full PDPL compliance.",
+  "author": "KHAWRIZM (Sulaiman Alshammari)",
+  "license": "Proprietary",
+  "homepage": "https://khawrizm.com",
+  "repository": "https://github.com/graxos/OFFICIAL",
+  "sovereignty": {
+    "telemetry": false,
+    "analytics": false,
+    "dataResidency": "SA",
+    "compliance": [
+      "PDPL",
+      "NCA-ECC"
+    ],
+    "localFirst": true,
+    "aiInference": "on-device",
+    "externalAPIs": "optional-only"
+  },
+  "engines": {
+    "niyah": "1.0.0",
+    "modelRouter": "1.0.0",
+    "threeLobeAgent": "1.0.0"
+  },
+  "keywords": [
+    "sovereign-ide",
+    "arabic-nlp",
+    "local-ai",
+    "zero-telemetry",
+    "pdpl",
+    "niyah-engine",
+    "ollama",
+    "saudi-tech"
+  ]
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HAVEN — نظرة شاملة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Cairo', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #2c5364 80%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: rgba(20,30,40,0.95);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px #000a, 0 1.5px 0 #22c55e;
+      padding: 48px 32px 32px 32px;
+      position: relative;
+    }
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 0.5em;
+      letter-spacing: 2px;
+      color: #22c55e;
+      text-shadow: 0 2px 16px #22c55e44;
+    }
+    h2 {
+      color: #61dafb;
+      margin-top: 2.5em;
+      font-size: 2rem;
+    }
+    .section {
+      margin-bottom: 2.5em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 32px;
+      margin-top: 2em;
+    }
+    .card {
+      background: linear-gradient(120deg, #1a2a3a 60%, #22c55e22);
+      border-radius: 18px;
+      box-shadow: 0 2px 12px #0005;
+      padding: 24px 18px;
+      min-height: 180px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1.5px solid #22c55e33;
+    }
+    .card:hover {
+      transform: translateY(-8px) scale(1.03) rotateY(4deg);
+      box-shadow: 0 8px 32px #22c55e44, 0 2px 8px #0008;
+    }
+    .three-d {
+      width: 100%;
+      height: 320px;
+      background: linear-gradient(120deg, #22c55e33 60%, #61dafb22);
+      border-radius: 18px;
+      margin-bottom: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px #22c55e22;
+      position: relative;
+      overflow: hidden;
+    }
+    .three-d-cube {
+      width: 120px;
+      height: 120px;
+      transform-style: preserve-3d;
+      animation: rotateCube 6s infinite linear;
+      position: relative;
+    }
+    .three-d-cube div {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #22c55e 60%, #61dafb 100%);
+      opacity: 0.92;
+      border: 2px solid #fff2;
+      box-shadow: 0 2px 12px #22c55e44;
+    }
+    .three-d-cube .front  { transform: translateZ(60px); }
+    .three-d-cube .back   { transform: rotateY(180deg) translateZ(60px); }
+    .three-d-cube .right  { transform: rotateY(90deg) translateZ(60px); }
+    .three-d-cube .left   { transform: rotateY(-90deg) translateZ(60px); }
+    .three-d-cube .top    { transform: rotateX(90deg) translateZ(60px); }
+    .three-d-cube .bottom { transform: rotateX(-90deg) translateZ(60px); }
+    @keyframes rotateCube {
+      0% { transform: rotateX(0) rotateY(0); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
+    }
+    .footer {
+      text-align: center;
+      color: #fff8;
+      margin-top: 3em;
+      font-size: 1.1em;
+    }
+    @media (max-width: 700px) {
+      .container { padding: 18px 4vw; }
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>HAVEN — السيادة الرقمية تبدأ من هنا</h1>
+    <div class="three-d">
+      <div class="three-d-cube">
+        <div class="front"></div>
+        <div class="back"></div>
+        <div class="right"></div>
+        <div class="left"></div>
+        <div class="top"></div>
+        <div class="bottom"></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>ما هو HAVEN؟</h2>
+      <p>
+        HAVEN هو نظام تشغيل وبيئة تطوير سيادية متكاملة، مبنية على Debian ARM64 مع نواة مخصصة وأدوات ذكاء اصطناعي عربية أولاً.<br>
+        يجمع بين الأمان، الخصوصية، والابتكار العلمي، ويمنحك السيطرة الكاملة على بياناتك وأدواتك.
+      </p>
+    </div>
+    <div class="section">
+      <h2>فكرة المشروع</h2>
+      <p>
+        وُلد HAVEN كرد فعل على فقدان الثقة في المنصات المركزية، ليكون منصة سيادية مفتوحة المصدر تُمكّن الأفراد والمؤسسات من بناء وتطوير البرمجيات والذكاء الاصطناعي دون أي تبعية أو تتبع خارجي.
+      </p>
+    </div>
+    <div class="section">
+      <h2>الهيكلية والتركيبة</h2>
+      <div class="grid">
+        <div class="card">
+          <b>نظام التشغيل</b><br>
+          Debian Bookworm ARM64، نواة 6.1 LTS، ملفات نظام غير قابلة للتغيير، تشفير كامل للقرص، دعم YubiKey.
+        </div>
+        <div class="card">
+          <b>الـIDE السيادي</b><br>
+          React 19، TypeScript 5.8، Monaco Editor، xterm.js، isomorphic-git، Ollama للذكاء الاصطناعي المحلي.
+        </div>
+        <div class="card">
+          <b>محرك Niyah</b><br>
+          تحليل نية عربي، تصنيف لهجات ونبرة ومجال، توجيه ثلاثي الفصوص (معرفي، تنفيذي، حسي)، سيادة كاملة.
+        </div>
+        <div class="card">
+          <b>أدوات الأمن والطب الشرعي</b><br>
+          8 ماسحات أمنية حقيقية، كشف تسريبات، تدقيق بصمة، توليد أدلة رقمية.
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>الفوائد العلمية</h2>
+      <ul>
+        <li>تمكين البحث والتطوير في الذكاء الاصطناعي العربي.</li>
+        <li>توفير بيئة اختبار آمنة للابتكار العلمي.</li>
+        <li>تعزيز الأمن السيبراني والتحليل الجنائي الرقمي.</li>
+        <li>دعم التعليم والتدريب التقني باللغة العربية.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>الفوائد الاقتصادية</h2>
+      <ul>
+        <li>خفض التكاليف عبر الاستغناء عن الخدمات السحابية الأجنبية.</li>
+        <li>تعزيز الاقتصاد الرقمي المحلي.</li>
+        <li>توفير فرص عمل في مجالات الأمن، البرمجة، والذكاء الاصطناعي.</li>
+        <li>حماية البيانات الوطنية من التسريب والاستغلال التجاري.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>الفوائد الاجتماعية والمادية</h2>
+      <ul>
+        <li>تعزيز السيادة الرقمية والخصوصية للمجتمع.</li>
+        <li>تمكين الأفراد من التحكم الكامل في بياناتهم وأدواتهم.</li>
+        <li>دعم الابتكار المحلي والمبادرات المجتمعية التقنية.</li>
+        <li>حماية الأطفال والمستخدمين من التتبع والاستغلال.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>مميزات إضافية</h2>
+      <ul>
+        <li>قابلية التخصيص الكاملة لكل مكون.</li>
+        <li>دعم كامل للمعايير الوطنية (PDPL، NCA-ECC).</li>
+        <li>تكامل مع YubiKey، dm-verity، وأدوات تشفير متقدمة.</li>
+        <li>واجهة تفاعلية ثلاثية الأبعاد (3D) تعكس روح الابتكار.</li>
+        <li>توافق مع أحدث تقنيات البرمجة والتطوير.</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; 2026 KHAWRIZM — جميع الحقوق محفوظة. <br>
+      <span style="color:#22c55e">الخوارزمية دائماً تعود للوطن</span>
+    </div>
+  </div>
+</body>
+</html>

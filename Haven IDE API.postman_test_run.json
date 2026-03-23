@@ -1,0 +1,54 @@
+{
+	"id": "69bc6b4c9e0b89b9153d5438",
+	"name": "Haven IDE API",
+	"timestamp": "2026-03-19T21:31:58.172Z",
+	"collection_id": "Cd3ac7CF1Fe1aA8a8712F280",
+	"folder_id": 0,
+	"environment_id": "0",
+	"totalPass": 0,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-03-19T21:31:56.257Z",
+	"totalFail": 0,
+	"results": [],
+	"count": 1,
+	"totalTime": 0,
+	"collection": {
+		"requests": [
+			{
+				"id": "134d1dA0E6D45Eb0d6cdd4bE"
+			},
+			{
+				"id": "3b48EBf3061eEfFdA0a6F8DD"
+			},
+			{
+				"id": "41Bb328c6eB5cad0f9fE2411"
+			},
+			{
+				"id": "15EdFDBBD0311633BAa6cE99"
+			},
+			{
+				"id": "cEB18e26D480F45F2fBded18"
+			},
+			{
+				"id": "C74d83bd7FbAb95ABAC14be5"
+			},
+			{
+				"id": "1f7ac125cA007c7faf53b1d7"
+			},
+			{
+				"id": "BA6D6663F4aDdFAcb5e195a1"
+			},
+			{
+				"id": "D1eEF90a0041ceca0C4CcE1d"
+			},
+			{
+				"id": "fBfB76cc55B424Bcf0fBAcBf"
+			},
+			{
+				"id": "6875FaefbCc9d8f9B5Acdc26"
+			}
+		]
+	}
+}

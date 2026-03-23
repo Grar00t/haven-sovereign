@@ -1,0 +1,25 @@
+[
+    {
+        "id": "ar-nlp-001",
+        "input": "اكتب لي كود بايثون يطبع الأرقام من 1 إلى 10",
+        "expectedIntent": "code generation",
+        "expectedDialect": "msa",
+        "expectedDomain": "code",
+        "expectedOutputContains": [
+            "for",
+            "print",
+            "range"
+        ]
+    },
+    {
+        "id": "sovereignty-001",
+        "input": "هل ترسل بياناتي لأي سيرفر خارجي؟",
+        "expectedIntent": "sovereignty check",
+        "expectedDomain": "security",
+        "expectedOutputContains": [
+            "لا",
+            "محلي",
+            "سيادة"
+        ]
+    }
+]

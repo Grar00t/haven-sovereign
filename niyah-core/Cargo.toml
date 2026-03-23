@@ -1,0 +1,11 @@
+[package]
+name = "niyah-core-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "niyah-bridge"
+path = "bridge.rs"
+
+[dependencies]
+# Dependencies will be added as needed for forensics

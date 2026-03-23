@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HAVEN — الصفحة التعريفية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #22c55e;
+      --accent-rgb: 34, 197, 94;
+      --blue: #61dafb;
+      --blue-rgb: 97, 218, 251;
+      --bg1: #0f2027;
+      --bg2: #2c5364;
+      --card: #1a2a3a;
+      --shadow: rgba(34, 197, 94, 0.27);
+      --radius: 22px;
+      --transition: 0.2s;
+    }
+
+    * {
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Cairo', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2) 80%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      width: 100%;
+      background: rgba(20, 30, 40, 0.98);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+      padding: 0.9em 1.2em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar .logo {
+      font-size: 1.7em;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-right: 1vw;
+      white-space: nowrap;
+    }
+
+    .topbar nav {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-left: 1vw;
+    }
+
+    .topbar nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: color var(--transition), opacity var(--transition);
+      opacity: 0.95;
+    }
+
+    .topbar nav a:hover {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      background: rgba(20, 30, 40, 0.97);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 1.5px 0 var(--accent);
+      padding: 48px 32px 32px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 0.5em;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-shadow: 0 2px 16px rgba(var(--accent-rgb), 0.25);
+      text-align: center;
+    }
+
+    h2 {
+      color: var(--blue);
+      margin-top: 2.2em;
+      font-size: 2rem;
+    }
+
+    .section {
+      margin-bottom: 2.5em;
+    }
+
+    .cta-bar {
+      display: flex;
+      gap: 1em;
+      margin: 1.5em 0 2em;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85em 2em;
+      font-size: 1.05em;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 12px var(--shadow);
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .cta-btn.secondary {
+      background: var(--blue);
+      color: #14202a;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.24);
+    }
+
+    .cta-btn.secondary:hover {
+      box-shadow: 0 8px 24px rgba(var(--blue-rgb), 0.24);
+    }
+
+    .three-d {
+      width: 100%;
+      height: 320px;
+      background: linear-gradient(
+        120deg,
+        rgba(var(--accent-rgb), 0.20) 60%,
+        rgba(var(--blue-rgb), 0.14)
+      );
+      border-radius: 18px;
+      margin-bottom: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(var(--accent-rgb), 0.14);
+      position: relative;
+      overflow: hidden;
+      perspective: 800px;
+    }
+
+    .three-d-cube {
+      width: 120px;
+      height: 120px;
+      transform-style: preserve-3d;
+      animation: rotateCube 6s infinite linear;
+      position: relative;
+    }
+
+    .three-d-cube div {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--accent) 60%, var(--blue) 100%);
+      opacity: 0.92;
+      border: 2px solid rgba(255,255,255,0.14);
+      box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.25);
+    }
+
+    .three-d-cube .front  { transform: translateZ(60px); }
+    .three-d-cube .back   { transform: rotateY(180deg) translateZ(60px); }
+    .three-d-cube .right  { transform: rotateY(90deg) translateZ(60px); }
+    .three-d-cube .left   { transform: rotateY(-90deg) translateZ(60px); }
+    .three-d-cube .top    { transform: rotateX(90deg) translateZ(60px); }
+    .three-d-cube .bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+    @keyframes rotateCube {
+      0%   { transform: rotateX(0) rotateY(0); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
+    }
+
+    .arch-diagram {
+      width: 100%;
+      margin: 2em 0 2.5em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .arch-img {
+      width: 90%;
+      max-width: 650px;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(var(--blue-rgb), 0.12);
+      border: 2px solid rgba(var(--accent-rgb), 0.20);
+      background: rgba(255,255,255,0.04);
+      padding: 1.5em;
+      text-align: center;
+      color: #fff;
+      font-size: 1.1em;
+      line-height: 1.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 32px;
+      margin-top: 2em;
+    }
+
+    .card {
+      background: linear-gradient(
+        120deg,
+        var(--card) 60%,
+        rgba(var(--accent-rgb), 0.13)
+      );
+      border-radius: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      padding: 24px 18px;
+      min-height: 180px;
+      transition: transform var(--transition), box-shadow var(--transition);
+      border: 1.5px solid rgba(var(--accent-rgb), 0.20);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.7em;
+      line-height: 1.8;
+    }
+
+    .card .icon {
+      font-size: 2.2em;
+      margin-bottom: 0.2em;
+      color: var(--blue);
+      filter: drop-shadow(0 2px 8px rgba(var(--accent-rgb), 0.25));
+    }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 8px 32px rgba(var(--accent-rgb), 0.22), 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    ul {
+      line-height: 2;
+      padding-right: 1.2rem;
+    }
+
+    .footer {
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+      margin-top: 3em;
+      font-size: 1.05em;
+      line-height: 1.9;
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+
+      .topbar nav {
+        justify-content: center;
+      }
+
+      .container {
+        margin: 18px 12px;
+        padding: 20px 16px 24px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.25rem;
+      }
+
+      .arch-img {
+        font-size: 0.92em;
+        width: 100%;
+      }
+
+      .three-d {
+        height: 240px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo">HAVEN</span>
+    <nav>
+      <a href="#about">عن HAVEN</a>
+      <a href="#structure">الهيكلية</a>
+      <a href="#benefits">الفوائد</a>
+      <a href="#roadmap">خارطة الطريق</a>
+      <a href="#cta">ابدأ الآن</a>
+    </nav>
+  </div>
+
+  <div class="container">
+    <h1>HAVEN — السيادة الرقمية تبدأ من هنا</h1>
+
+    <div class="cta-bar" id="cta">
+      <a class="cta-btn" href="#about">ابدأ الآن</a>
+      <a class="cta-btn secondary" href="#roadmap">تحميل الورقة التعريفية</a>
+    </div>
+
+    <div class="three-d">
+      <div class="three-d-cube">
+        <div class="front"></div>
+        <div class="back"></div>
+        <div class="right"></div>
+        <div class="left"></div>
+        <div class="top"></div>
+        <div class="bottom"></div>
+      </div>
+    </div>
+
+    <div class="section" id="about">
+      <h2>ما هو HAVEN؟</h2>
+      <p>
+        HAVEN هو نظام تشغيل وبيئة تطوير سيادية متكاملة، مبنية على Debian ARM64 مع نواة مخصصة وأدوات ذكاء اصطناعي عربية أولاً.<br>
+        يجمع بين الأمان، الخصوصية، والابتكار العلمي، ويمنحك السيطرة الكاملة على بياناتك وأدواتك.
+      </p>
+    </div>
+
+    <div class="section" id="structure">
+      <h2>الهيكلية والتركيبة</h2>
+
+      <div class="arch-diagram">
+        <div class="arch-img">
+          <b>مخطط معماري مبسط:</b><br>
+          <span style="color: var(--accent)">[ المستخدم ]</span>
+          <span style="color: rgba(255,255,255,0.6)">⇄</span>
+          <span style="color: var(--blue)">[ HAVEN IDE ]</span>
+          <span style="color: rgba(255,255,255,0.6)">⇄</span>
+          <span style="color: var(--accent)">[ محرك Niyah ]</span>
+          <span style="color: rgba(255,255,255,0.6)">⇄</span>
+          <span style="color: var(--blue)">[ نظام التشغيل السيادي ]</span>
+          <br><br>
+          <small>كل طبقة تعمل محليًا 100%، بدون أي اتصال خارجي أو تتبع.</small>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <span class="icon">🖥️</span>
+          <b>نظام التشغيل</b><br>
+          Debian Bookworm ARM64، نواة 6.1 LTS، ملفات نظام غير قابلة للتغيير، تشفير كامل للقرص، دعم YubiKey.
+        </div>
+
+        <div class="card">
+          <span class="icon">💻</span>
+          <b>الـIDE السيادي</b><br>
+          React 19، TypeScript 5.8، Monaco Editor، xterm.js، isomorphic-git، Ollama للذكاء الاصطناعي المحلي.
+        </div>
+
+        <div class="card">
+          <span class="icon">🧠</span>
+          <b>محرك Niyah</b><br>
+          تحليل نية عربي، تصنيف لهجات ونبرة ومجال، توجيه ثلاثي الفصوص (معرفي، تنفيذي، حسي)، سيادة كاملة.
+        </div>
+
+        <div class="card">
+          <span class="icon">🛡️</span>
+          <b>أدوات الأمن والطب الشرعي</b><br>
+          8 ماسحات أمنية حقيقية، كشف تسريبات، تدقيق بصمة، توليد أدلة رقمية.
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="benefits">
+      <h2>الفوائد العلمية</h2>
+      <ul>
+        <li>تمكين البحث والتطوير في الذكاء الاصطناعي العربي.</li>
+        <li>توفير بيئة اختبار آمنة للابتكار العلمي.</li>
+        <li>تعزيز الأمن السيبراني والتحليل الجنائي الرقمي.</li>
+        <li>دعم التعليم والتدريب التقني باللغة العربية.</li>
+      </ul>
+
+      <h2>الفوائد الاقتصادية</h2>
+      <ul>
+        <li>خفض التكاليف عبر الاستغناء عن الخدمات السحابية الأجنبية.</li>
+        <li>تعزيز الاقتصاد الرقمي المحلي.</li>
+        <li>توفير فرص عمل في مجالات الأمن، البرمجة، والذكاء الاصطناعي.</li>
+        <li>حماية البيانات الوطنية من التسريب والاستغلال التجاري.</li>
+      </ul>
+
+      <h2>الفوائد الاجتماعية والمادية</h2>
+      <ul>
+        <li>تعزيز السيادة الرقمية والخصوصية للمجتمع.</li>
+        <li>تمكين الأفراد من التحكم الكامل في بياناتهم وأدواتهم.</li>
+        <li>دعم الابتكار المحلي والمبادرات المجتمعية التقنية.</li>
+        <li>حماية الأطفال والمستخدمين من التتبع والاستغلال.</li>
+      </ul>
+    </div>
+
+    <div class="section" id="roadmap">
+      <h2>خارطة الطريق والرؤية</h2>
+      <ul>
+        <li>استكمال وحدات النواة الأمنية (Phalanx modules).</li>
+        <li>دمج YubiKey وتوثيق تشفير متقدم.</li>
+        <li>بناء منصة استضافة كود P2P (K-Forge).</li>
+        <li>إطلاق مدير حزم سيادي.</li>
+        <li>الحصول على شهادات NCA-ECC.</li>
+        <li>توسيع الدعم للذكاء الاصطناعي العربي متعدد اللهجات.</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 KHAWRIZM — جميع الحقوق محفوظة.<br>
+      <span style="color: var(--accent)">الخوارزمية دائماً تعود للوطن</span>
+    </div>
+  </div>
+</body>
+</html>

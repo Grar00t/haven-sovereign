@@ -26,7 +26,7 @@ export interface PurgeManifest {
   timestamp: number;
 }
 
-class SovereignSessionCleaner {
+export class SovereignSessionCleaner {
   private config: SessionConfig;
   private sessions: Map<string, EncryptedSession>;
   private cleanupInterval: NodeJS.Timeout | null = null;

@@ -24,3 +24,8 @@ dist/
 .next/
 *.pem
 *.key
+.vscode/
+haven-electron/
+haven-tauri/
+*.postman_test_run.json
+package.json.bak

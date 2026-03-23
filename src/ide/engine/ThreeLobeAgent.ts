@@ -76,6 +76,7 @@ class ThreeLobeAgent {
     ollamaService.on('status-change', (s: ConnectionStatus) => {
       this.statusListeners.forEach(fn => fn(s));
     });
+    this.startMemoryMonitor();
   }
 
   // ── Connection lifecycle ───────────────────────────────────
@@ -104,7 +105,7 @@ class ThreeLobeAgent {
       id,
       model: modelRouter.resolveModel(id),
       available: ollamaService.hasModel(LOBE_CONFIGS[id].model) ||
-                 ollamaService.hasModel(LOBE_CONFIGS[id].fallbackModel),
+        ollamaService.hasModel(LOBE_CONFIGS[id].fallbackModel),
       busy: this.activeLobe === id,
     }));
   }
@@ -1168,6 +1169,33 @@ class ThreeLobeAgent {
     });
 
     return result?.response?.trim() || null;
+  }
+
+  // ── Resource Monitoring ────────────────────────────────────
+
+  private startMemoryMonitor() {
+    // Check memory every 30 seconds
+    setInterval(async () => {
+      let usedBytes = 0;
+
+      // Node.js / Electron Main
+      if (typeof process !== 'undefined' && process.memoryUsage) {
+        usedBytes = process.memoryUsage().heapUsed;
+      }
+      // Chrome / Chromium (Electron Renderer)
+      else if ((performance as any).memory) {
+        usedBytes = (performance as any).memory.usedJSHeapSize;
+      }
+
+      const LIMIT_500MB = 500 * 1024 * 1024;
+
+      if (usedBytes > LIMIT_500MB) {
+        const manifest = await sovereignSessionCleaner.purge('deep');
+        console.warn(`[ThreeLobeAgent] Memory pressure ${(usedBytes / 1024 / 1024).toFixed(0)}MB. Purged:`, manifest);
+        // Also trim local history
+        if (this.history.length > 20) this.history = this.history.slice(-20);
+      }
+    }, 30000);
   }
 }
 

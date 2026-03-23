@@ -29,7 +29,7 @@
 #
 # ═══════════════════════════════════════════════════════════════════════════
 
-set -euo pipefail
+set -uo pipefail
 IFS=$'\n\t'
 export DEBIAN_FRONTEND=noninteractive
 
@@ -66,7 +66,13 @@ warn() { printf "${Y}[⚠]${N} %s\n"        "$*"                      | tee -a "
 die()  { printf "${R}[✗] FATAL: %s${N}\n" "$*"                      | tee -a "$BUILD_LOG"; exit 1; }
 step() { printf "\n${M}${B}━━━━  %s  ━━━━${N}\n" "$*"             | tee -a "$BUILD_LOG"; }
 
+_init_dirs() {
+  mkdir -p "${BD}"/{niyah/{engine,config,service},phalanx,release,repos,lb}
+  touch "$BUILD_LOG" 2>/dev/null || true
+}
+
 banner() {
+_init_dirs
 printf "${C}${B}"
 cat << 'EOF'
 

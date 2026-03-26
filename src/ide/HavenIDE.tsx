@@ -21,6 +21,8 @@ import { OutlinePanel } from './components/OutlinePanel';
 import { NiyahPanel } from './components/NiyahPanel';
 import { ToolsPanel } from './components/ToolsPanel';
 import { SovereignDashboard } from './components/SovereignDashboard';
+import { CasperAssistant } from './components/CasperAssistant';
+import { MeshPanel } from './components/MeshPanel';
 import Editor from '@monaco-editor/react';
 
 export function HavenIDE() {
@@ -176,6 +178,7 @@ export function HavenIDE() {
             {activeSidebarPanel === 'niyah' && <NiyahPanel />}
             {activeSidebarPanel === 'dashboard' && <SovereignDashboard />}
             {activeSidebarPanel === 'tools' && <ToolsPanel />}
+            {activeSidebarPanel === 'mesh' && <MeshPanel />}
 
             {/* Sidebar resize handle */}
             <div
@@ -253,6 +256,9 @@ export function HavenIDE() {
           Zen Mode — Press Ctrl+K to exit
         </div>
       )}
+
+      {/* Casper — The Ghost AI Assistant */}
+      <CasperAssistant />
     </div>
   );
 }

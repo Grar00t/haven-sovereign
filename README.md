@@ -1,348 +1,358 @@
-<div align="center">
-<img width="1200" height="400" alt="HAVEN Sovereign Banner" src="public/sovereign-banner.svg" />
+# HAVEN-Sovereign
 
-# HAVEN — The Sovereign Algorithm
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/khawrizm/haven-sovereign?style=social)](https://github.com/khawrizm/haven-sovereign)
+[![Arabic](https://img.shields.io/badge/Language-Arabic%20%2B%20English-blue.svg)](#-العربية)
+[![Zero Telemetry](https://img.shields.io/badge/Telemetry-None-brightgreen.svg)](#security)
+[![Ollama](https://img.shields.io/badge/Models-Ollama%20Integrated-blueviolet.svg)](#architecture)
 
-### Saudi Arabia's First Sovereign AI Development Environment
+**Sovereign IDE with Arabic-First NLP, Three-Lobe Architecture, and Zero Cloud Dependency**
 
-**v5.0 · Built by KHAWRIZM**
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![License](https://img.shields.io/badge/License-AGPL%20v3-sovereign--gold)]()
-[![PDPL](https://img.shields.io/badge/Compliant-PDPL%20%7C%20NCA--ECC-22c55e)]()
-
-</div>
+Built by Sulaiman Alshammari (@Dragon403) in Riyadh, Saudi Arabia. Powered by **KHAWRIZM** — the sovereign technology framework.
 
 ---
 
-## Overview
-
-**HAVEN** (Heuristic Autonomous Venture for Ethical Nodes) is a sovereign IDE, AI engine, and product landing ecosystem built entirely from scratch. Zero telemetry. Zero foreign API dependencies for core features. Full Saudi PDPL compliance. Every line of AI inference runs locally on the user's machine through Ollama.
-
-This project exists to prove one thing: **Saudi Arabia does not need Silicon Valley's tools to build world-class software.**
-
----
-
-## Architecture
+## 🏗️ Three-Lobe Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                        HAVEN IDE Shell                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
-│  │  Monaco   │  │ Terminal  │  │   Git    │  │  Extensions  │  │
-│  │  Editor   │  │  (xterm)  │  │  Panel   │  │    Panel     │  │
-│  └────┬─────┘  └──────────┘  └──────────┘  └──────────────┘  │
-│       │                                                        │
-│  ┌────▼─────────────────────────────────────────────────────┐  │
-│  │              NiyahEngine (Arabic-First NLP)               │  │
-│  │  ┌──────────┐  ┌───────────┐  ┌───────────────────────┐  │  │
-│  │  │ Cognitive │  │ Executive │  │       Sensory         │  │  │
-│  │  │   Lobe   │  │   Lobe    │  │   (Arabic Morphology) │  │  │
-│  │  └──────────┘  └───────────┘  └───────────────────────┘  │  │
-│  └──────────────────────┬────────────────────────────────────┘  │
-│                         │                                       │
-│  ┌──────────────────────▼────────────────────────────────────┐  │
-│  │              ModelRouter (16 model families)               │  │
-│  │  Ollama ─── ThreeLobeAgent ─── NiyahCompletionProvider    │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │ ForensicLab  │  │  NodeRadar   │  │  HackingToolkit      │  │
-│  │ (Real scans) │  │ (Real metrics│  │  (Security tools)    │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
-└────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    HAVEN-Sovereign                           │
+│                   (Desktop IDE + Runtime)                    │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+    ┌─────▼──────┐ ┌────▼────────┐ ┌──▼──────────┐
+    │ COGNITIVE  │ │ EXECUTIVE   │ │  SENSORY    │
+    │ LOBE       │ │ LOBE        │ │  LOBE       │
+    │            │ │             │ │             │
+    │ Analysis   │ │ Decision    │ │ Perception  │
+    │ Reasoning  │ │ Making      │ │ Feedback    │
+    │ Planning   │ │ Execution   │ │ Response    │
+    │            │ │             │ │             │
+    │deepseek-r1 │ │ niyah:latest│ │niyah:writer │
+    │  :8b       │ │             │ │             │
+    └─────┬──────┘ └────┬────────┘ └──┬──────────┘
+          │              │              │
+          └──────────────┼──────────────┘
+                         │
+              ┌──────────▼──────────┐
+              │  NIYAH Intent       │
+              │  Router             │
+              │  (Arabic Root Lex)  │
+              └─────────────────────┘
+                         │
+              ┌──────────▼──────────┐
+              │  Ollama Local       │
+              │  127.0.0.1:11434    │
+              └─────────────────────┘
 ```
 
 ---
 
-## Core Features
+## 📊 Comparison: HAVEN vs VSCode vs Cursor
 
-### NiyahEngine — Arabic-First Intent Analysis
-- **Arabic Root Tokenizer** — extracts trilateral roots (جذر ثلاثي) from 90+ morphological patterns with 150+ root entries
-- **Three-Lobe Architecture** — Cognitive (context & memory), Executive (planning & routing), Sensory (input parsing with Arabic morphological awareness)
-- **Dialect Detection** — Gulf, Najdi, Hejazi, Egyptian, Levantine, Tunisian, Modern Standard Arabic
-- **Tone & Domain Classification** — academic, casual, technical, business, security, creative
-- **Sovereignty Scoring** — flags foreign telemetry patterns, dependency risks, and data-exit vectors
-- **Intent Graph** — temporal, contextual, root, and domain edge linking across sessions
-- **1,056 lines** of hand-written Arabic NLP — no external NLP library dependencies
-
-### ModelRouter — Intelligent Multi-Model Routing
-- **16 model families** supported across Ollama, HuggingFace, and local inference
-- **Three-lobe routing** — matches intent complexity to optimal model size
-- **918 lines** of routing logic with fallback chains and load balancing
-- **Zero vendor lock-in** — swap models without changing application code
-
-### Inline Niyah Suggestions
-- 5-layer completion pipeline integrated into Monaco Editor
-- Sovereign code patterns (PDPL-compliant, zero-telemetry templates)
-- Arabic comment expansion, language-specific idioms (TS/Python/Rust/Go)
-- File context analysis + intent memory from NiyahEngine sessions
-
-### IntentGraph Visualization
-- Interactive force-directed SVG layout of intent relationships
-- Edge type filtering: context, root, domain, temporal
-- Timeline slider, node drag support, PNG export
-- Code-split into a separate chunk (16 KB gzipped)
-
-### Full IDE Experience
-- **Monaco Editor** with sovereign completion provider and multi-cursor support
-- **File Explorer** — drag-and-drop with real filesystem via File System Access API
-- **Integrated Terminal** — xterm.js v6 with 35+ built-in commands including `expose`, `sovereign`, `phalanx`, `niyah`
-- **Git Panel** — staging, commits, diff view, branch management via isomorphic-git
-- **Extensions Panel** — curated sovereign extensions with install/remove
-- **Search** — regex support, grouped results, replace all
-- **Settings Editor** — full IDE configuration with live preview
-- **Keyboard Shortcuts** — searchable shortcut reference
-- **Activity Bar** — keyboard navigation, ARIA roles, tooltips
-
-### ForensicLab — Real Digital Evidence Analysis
-- **Live browser forensics** — scans Performance API for telemetry domains in real-time
-- **localStorage/cookie audit** — detects tracking keys (`_ga`, `_gid`, `fbclid`, etc.)
-- **Service Worker inspection** — enumerates registered workers and scopes
-- **Permission audit** — checks camera, microphone, geolocation, notification states
-- **Evidence case files** — pre-loaded surveillance exposure documentation
-
-### NodeRadar — Real System Metrics
-- **Host machine metrics** — CPU cores, device memory, JS heap usage, storage quota, network type via browser APIs
-- **Live refresh** — real metrics polled every 5 seconds
-- **Sovereign mesh visualization** — radar display with sweep animation
-- **Filtering** — by status (active/inactive/offline) and type (validator/full node/host)
-
-### HackingToolkit — Security Analysis Suite
-- 8 security analysis tools + 4 simulation modules
-- Real WebRTC leak detection, browser fingerprint analysis
-- Network telemetry scanning, cookie/storage forensics
-
-### HavenChat — AI Ghost Companion
-- Multi-model fallback chain (Llama 3.3 70B, Qwen3 32B, DeepSeek-R1-Distill 70B)
-- Voice input (English/Arabic) via Web Speech API
-- File attachment analysis with context-aware responses
-- 5 interactive spells: sensitive-word fade, physics drift, wave, quantum coin, visibility toggle
-- Offline fallback with pattern-matched local responses
-
-### Professional Landing Page
-- 19+ sections: Hero, Products, Benchmarks, Comparison, Expose, Digital Citizenship, Roadmap, Pricing, FAQ, and more
-- **Bilingual** — full English/Arabic (EN/AR) with i18n translation system
-- Dark mode, command palette (Ctrl+K), interactive terminal demo
-- Smooth animations via Motion (Framer Motion v12)
+| Feature | **HAVEN-Sovereign** | VSCode | Cursor |
+|---------|:---:|:---:|:---:|
+| **Language** | TypeScript + Rust | C/C++ | C/C++ |
+| **AI Model** | Local Ollama | Cloud (GitHub Copilot) | Cloud (OpenAI) |
+| **Privacy** | ✅ 100% Local | ❌ Proprietary | ❌ Proprietary |
+| **Arabic NLP** | ✅ Native | ❌ No | ❌ No |
+| **Three-Lobe Architecture** | ✅ Yes | ❌ No | ❌ No |
+| **Telemetry** | ✅ None | ⚠️ Microsoft | ⚠️ Anthropic |
+| **Cost** | Free | Free ($4/mo Pro) | $20/mo |
+| **Offline Mode** | ✅ Full | ⚠️ Limited | ❌ No |
+| **Model Routing** | ✅ Automatic | N/A | N/A |
+| **Desktop Runtime** | ✅ Tauri | N/A | N/A |
 
 ---
 
-## Tech Stack
-
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Framework | React | 19 |
-| Language | TypeScript | 5.8 (strict mode) |
-| Bundler | Vite | 6 |
-| State Management | Zustand | 5 |
-| Code Editor | Monaco Editor | latest |
-| CSS Framework | Tailwind CSS | 4 |
-| Animation | Motion (Framer Motion) | 12 |
-| Terminal | xterm.js | 6 |
-| Git Engine | isomorphic-git + lightning-fs | 1.37 |
-| Icons | Lucide React | 0.546 |
-| Routing | React Router | 7 |
-| Testing | Vitest | latest |
-
----
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- **Node.js** 18+ ([download](https://nodejs.org/))
-- **npm** 9+ (included with Node.js)
-- **Ollama** (optional, for local AI inference) ([download](https://ollama.com/))
+- **Node.js** 18+ or **Bun**
+- **Ollama** (local)
+- **Rust** 1.70+ (for Tauri desktop build)
 
 ### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/khawrizm/haven-sovereign.git
+   cd haven-sovereign
+   ```
+
+2. **Install Ollama** (if not already installed)
+   ```bash
+   # macOS
+   brew install ollama
+   
+   # Linux
+   curl -fsSL https://ollama.ai/install.sh | sh
+   
+   # Windows
+   # Download from https://ollama.ai
+   ```
+
+3. **Pull required models**
+   ```bash
+   ollama pull deepseek-r1:8b
+   ollama pull niyah:latest
+   ollama pull niyah:writer
+   ```
+
+4. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
+
+5. **Start Ollama daemon**
+   ```bash
+   ollama serve
+   ```
+
+6. **Run HAVEN IDE (Web)**
+   ```bash
+   npm run dev
+   # Opens http://localhost:5173
+   ```
+
+7. **Build Desktop App (Tauri)**
+   ```bash
+   npm run tauri dev
+   ```
+
+---
+
+## 📋 Project Structure
+
+```
+haven-sovereign/
+├── src/
+│   ├── components/          # React + TSX UI components
+│   │   ├── Hero.tsx         # Main interface
+│   │   ├── Navbar.tsx       # Navigation
+│   │   └── Editor.tsx       # Code editor with syntax highlighting
+│   ├── lib/
+│   │   ├── OllamaService.ts # Ollama API integration
+│   │   ├── NiyahEngine.ts   # Intent recognition + routing
+│   │   └── ModelRouter.ts   # Three-lobe decision engine
+│   ├── store/               # State management (Zustand/Pinia)
+│   ├── App.tsx              # Main entry
+│   └── main.tsx             # Bootstrap
+├── src-tauri/               # Rust backend (Tauri)
+│   ├── src/
+│   │   ├── main.rs          # Desktop app entry
+│   │   ├── lib.rs           # Sovereign logic
+│   │   └── ollama.rs        # Ollama bridge
+│   └── Cargo.toml
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tauri.conf.json
+└── README.md
+```
+
+---
+
+## 🧠 How NIYAH Works
+
+### Intent Recognition (Arabic-First)
+```typescript
+// Input: "اشرح لي كيفية بناء API بـ Node.js"
+// Intent detected: educational + technical
+
+const intent = analyzeNiyah(userInput);
+// {
+//   type: 'COGNITIVE',
+//   confidence: 0.92,
+//   language: 'ar-gulf',
+//   domain: 'backend'
+// }
+```
+
+### Model Routing
+```
+User Query
+    ↓
+NIYAH Intent Analysis
+    ↓
+    ├→ COGNITIVE (analysis) → deepseek-r1:8b
+    ├→ EXECUTIVE (code gen) → niyah:latest
+    └→ SENSORY (feedback)   → niyah:writer
+    ↓
+Aggregated Response
+```
+
+### Temperature & Context Settings
+- **Cognitive**: temp=0.3, ctx=2048 (analytical, precise)
+- **Executive**: temp=0.5, ctx=4096 (balanced execution)
+- **Sensory**: temp=0.7, ctx=1024 (creative, responsive)
+
+---
+
+## 🔐 Security & Privacy
+
+✅ **No cloud connectivity** — 100% local processing  
+✅ **No telemetry** — No data collection, no tracking  
+✅ **No API keys** — Runs entirely on your machine  
+✅ **Audit-grade code** — Fully open source, peer-reviewable  
+✅ **Sovereign jurisdiction** — Built in Saudi Arabia, owned by creators  
+
+---
+
+## 🌍 العربية
+
+### ما هو HAVEN-Sovereign؟
+
+**هيفن-سوفرين** هي بيئة تطوير متكاملة تجمع بين:
+
+- **محرر أكواد ذكي** مع إكمال تلقائي
+- **محرك نية عربي** يفهم النصوص بلهجة الخليج
+- **معمارية ثلاثية الفصوص** (معرفي + تنفيذي + حسي)
+- **نماذج محلية** عبر Ollama بدون تبعية سحابية
+
+### المتطلبات
+
 ```bash
-# Clone the sovereign repository
-git clone https://github.com/Grar00t/haven-sovereign.git
-cd haven-sovereign
+# تثبيت Ollama
+brew install ollama
 
-# Install dependencies
+# تحميل النماذج
+ollama pull deepseek-r1:8b
+ollama pull niyah:latest
+
+# تشغيل البيئة
 npm install
-
-# Copy environment config
-cp .env.example .env
-
-# Start the development server
 npm run dev
 ```
 
-Open **http://localhost:3000** to view the landing page. Navigate to **/ide** for the full IDE experience.
+### المميزات
 
-### Production Build
+| الميزة | التفاصيل |
+|-------|---------|
+| **الخصوصية** | 100% محلي، لا توجد بيانات سحابية |
+| **الفهم العربي** | تحليل نصوص باللهجة الخليجية |
+| **الأداء** | سرعة فائقة (لا توجد تأخيرات شبكة) |
+| **التحكم الكامل** | مفتوح المصدر، قابل للتخصيص |
+
+---
+
+## 🛠️ Configuration
+
+### `.env` (Optional)
+```env
+OLLAMA_HOST=127.0.0.1:11434
+OLLAMA_MODELS_DIR=/path/to/models
+HAVEN_THEME=dark
+NIYAH_TEMPERATURE=0.3
+```
+
+### `tauri.conf.json` (Desktop)
+```json
+{
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devPath": "http://localhost:5173"
+  },
+  "app": {
+    "windows": [{
+      "title": "HAVEN-Sovereign",
+      "width": 1200,
+      "height": 800
+    }]
+  }
+}
+```
+
+---
+
+## 📦 Available Commands
 
 ```bash
-npm run build     # TypeScript check + Vite build → dist/
-npm run preview   # Preview the production build locally
-```
+# Development
+npm run dev              # Start web IDE (port 5173)
+npm run tauri dev       # Start desktop app with live reload
 
-### Testing
+# Building
+npm run build           # Build web bundle
+npm run tauri build     # Build standalone desktop EXE
 
-```bash
-npm test          # Run all tests with Vitest
-npm run test:ui   # Run tests with Vitest UI
-npm run coverage  # Generate coverage report
-```
+# Testing & Quality
+npm run lint            # Run ESLint
+npm run type-check      # TypeScript validation
+npm run test            # Unit tests
 
----
-
-## Project Structure
-
-```
-HAVEN/
-├── index.html                  # HTML entry point
-├── package.json                # Dependencies & scripts (v5.0.0)
-├── vite.config.ts              # Vite build configuration
-├── tsconfig.json               # TypeScript config (strict mode)
-├── metadata.json               # Project metadata & sovereignty flags
-├── vercel.json                 # Vercel deployment config
-├── .env.example                # Environment variables template
-├── .gitignore                  # Git ignore rules
-│
-├── infra/                      # Infrastructure & deployment
-│   ├── deploy-khawrizm.sh      # Production deployment script
-│   └── bluvalt-provision.sh    # Saudi cloud provisioning
-│
-├── public/                     # Static assets
-│
-├── src/
-│   ├── main.tsx                # Router — / → Landing, /ide → IDE
-│   ├── App.tsx                 # Landing page shell (19 sections)
-│   ├── index.css               # Tailwind v4 theme + sovereign styles
-│   │
-│   ├── lib/utils.ts            # Shared utilities (cn helper)
-│   ├── store/useStore.ts       # Landing page Zustand store
-│   ├── i18n/translations.ts    # Bilingual EN/AR translation keys
-│   │
-│   ├── hooks/                  # Custom React hooks
-│   │   ├── useCountUp.ts       # Animated number counting
-│   │   ├── useInView.ts        # Intersection Observer wrapper
-│   │   ├── useMouseGlow.ts     # Cursor glow effect
-│   │   ├── useParallax.ts      # Scroll parallax
-│   │   ├── useScrollSpy.ts     # Section scroll tracking
-│   │   ├── useTilt.ts          # 3D card tilt
-│   │   └── useTypewriter.ts    # Typewriter text effect
-│   │
-│   ├── components/
-│   │   ├── landing/            # 19 landing page sections
-│   │   │   ├── Hero.tsx        # Main hero with TypeScript terminal
-│   │   │   ├── Products.tsx    # Product showcase
-│   │   │   ├── AIEngine.tsx    # NiyahEngine feature display
-│   │   │   ├── Benchmarks.tsx  # Performance benchmarks
-│   │   │   ├── Comparison.tsx  # Competitor comparison matrix
-│   │   │   ├── Expose.tsx      # Big Tech surveillance expose
-│   │   │   ├── Pricing.tsx     # Pricing tiers
-│   │   │   ├── Roadmap.tsx     # Development roadmap
-│   │   │   └── ...             # 11 more sections
-│   │   │
-│   │   └── shared/             # Reusable components
-│   │       ├── HavenChat.tsx   # Ghost AI companion (1,080 lines)
-│   │       ├── CommandPalette.tsx # Landing command palette
-│   │       ├── InteractiveTerminal.tsx
-│   │       └── ...             # 14 more shared components
-│   │
-│   └── ide/
-│       ├── HavenIDE.tsx        # IDE shell & layout
-│       ├── useIDEStore.ts      # IDE Zustand store
-│       ├── types.ts            # IDE type definitions
-│       │
-│       ├── components/         # IDE panels & editors
-│       │   ├── CodeEditor.tsx        # Monaco-based editor
-│       │   ├── Terminal.tsx          # xterm.js terminal
-│       │   ├── FileExplorer.tsx      # File tree
-│       │   ├── ForensicLab.tsx       # Real forensic scanner
-│       │   ├── NodeRadar.tsx         # Real system metrics radar
-│       │   ├── HackingToolkit.tsx    # Security analysis suite
-│       │   ├── CommandPalette.tsx    # IDE command palette
-│       │   └── ...                   # 18 more IDE components
-│       │
-│       └── engine/             # AI & intelligence engines
-│           ├── NiyahEngine.ts              # Arabic NLP (1,056 lines)
-│           ├── NiyahCompletionProvider.ts  # 5-layer inline completion
-│           ├── ModelRouter.ts              # Multi-model routing (918 lines)
-│           ├── ThreeLobeAgent.ts           # Three-lobe AI agent (1,021 lines)
-│           ├── OllamaService.ts            # Local Ollama integration (534 lines)
-│           └── GitService.ts               # isomorphic-git service
+# Ollama Management
+npm run ollama:pull     # Download models
+npm run ollama:list     # List available models
+npm run ollama:stop     # Stop Ollama daemon
 ```
 
 ---
 
-## Sovereignty Promise
+## 🔗 Technology Stack
 
-| Principle | Guarantee |
-|-----------|-----------|
-| **Zero Telemetry** | No data leaves the user's machine — ever |
-| **Local-First AI** | All inference runs through Ollama on-device |
-| **PDPL Compliant** | Saudi Personal Data Protection Law (نظام حماية البيانات الشخصية) |
-| **NCA-ECC Aligned** | National Cybersecurity Authority Essential Controls |
-| **No Vendor Lock-in** | Zero runtime dependencies on Google, Microsoft, or OpenAI |
-| **Open Audit** | Every line of code is inspectable and sovereign |
-| **Data Residency** | All storage is local — IndexedDB via lightning-fs |
-
----
-
-## Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server on port 3000 |
-| `npm run build` | Production build → `dist/` |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | TypeScript type-checking (`tsc --noEmit`) |
-| `npm test` | Run tests with Vitest |
-| `npm run test:ui` | Run tests with Vitest UI |
-| `npm run coverage` | Generate test coverage report |
-| `npm run clean` | Remove `dist/` directory |
-| `npm run deploy` | Deploy via `infra/deploy-khawrizm.sh` |
+| Layer | Technology |
+|-------|-----------|
+| **UI** | React 18 + TypeScript + Vite |
+| **Styling** | Tailwind CSS + Radix UI |
+| **State** | Zustand / Pinia |
+| **Desktop** | Tauri + Rust |
+| **AI/ML** | Ollama + deepseek-r1 + niyah |
+| **Backend** | Node.js (optional server) |
+| **Build** | Vite + SWC (lightning fast) |
 
 ---
 
-## Security
+## 🤝 Contributing
 
-- **No hardcoded secrets** — all API keys loaded from environment variables
-- **API keys gitignored** — `.env` files excluded from version control
-- **CSP headers** — Content Security Policy configured in deployment
-- **No external analytics** — zero third-party tracking scripts
-- **ForensicLab** — built-in tool to audit your own browser for tracking
+We welcome contributions! Please:
 
----
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Author
-
-**KHAWRIZM** — Sulaiman Alshammari (سليمان الشمري)
-
-- **Website:** [khawrizm.com](https://khawrizm.com)
-- **X:** [@khawrzm](https://x.com/khawrzm)
-- **YouTube:** [@saudicyper](https://youtube.com/@saudicyper)
-- **GitHub:** [@graxos](https://github.com/graxos)
-- **Email:** [shammar403@gmail.com](mailto:shammar403@gmail.com)
-- **Location:** Kingdom of Saudi Arabia
+**Code of Conduct**: Be respectful, technical, and direct.
 
 ---
 
-## License
+## 📄 License
 
-**AGPL-3.0** — Open Source Sovereign Software.
-See LICENSE for details.
-Built in the Kingdom of Saudi Arabia. Copyright © 2024–2026 KHAWRIZM (Sulaiman Alshammari).
+MIT License — See [LICENSE](LICENSE) file for details.
+
+**Copyright © 2025 Sulaiman Alshammari (@Dragon403)**  
+Built with 🇸🇦 in Riyadh, Saudi Arabia.
 
 ---
 
-<div align="center">
+## 📞 Support & Community
 
-**الخوارزمية السيادية**
+- **GitHub Issues**: [Report bugs](https://github.com/khawrizm/haven-sovereign/issues)
+- **Discussions**: [Ask questions](https://github.com/khawrizm/haven-sovereign/discussions)
+- **Twitter**: [@Dragon403](https://twitter.com/Dragon403)
+- **Website**: [khawrizm.com](https://khawrizm.com)
+- **IDE**: [ide.khawrizm.com](https://ide.khawrizm.com)
 
-*"We don't fork their tools. We replace them."*
+---
 
-**لا نستنسخ أدواتهم — نستبدلها.**
+## 🚀 Roadmap
 
-</div>
-# haven-sovereign
-# haven-sovereign
+- [x] Three-Lobe architecture core
+- [x] Ollama integration & model routing
+- [x] Arabic NLP intent engine
+- [x] Desktop (Tauri) build
+- [ ] Mobile version (React Native)
+- [ ] K-Forge (P2P network layer)
+- [ ] VS Code extension
+- [ ] Plugin marketplace
+- [ ] Multi-language code analysis
+
+---
+
+**Built by the people, for the people. Sovereign technology starts here. 🇸🇦⚡**

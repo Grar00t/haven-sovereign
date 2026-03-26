@@ -120,8 +120,16 @@ function saveEndpoints(eps: OllamaEndpoint[]) {
 }
 
 function loadActiveUrl(): string {
-  try { return localStorage.getItem(ACTIVE_EP_KEY) || 'http://localhost:11434'; }
-  catch { return 'http://localhost:11434'; }
+  try { return localStorage.getItem(ACTIVE_EP_KEY) || detectBackendUrl(); }
+  catch { return detectBackendUrl(); }
+}
+
+function detectBackendUrl(): string {
+  // In Electron, use 127.0.0.1 (localhost sometimes fails on Windows)
+  if (typeof window !== 'undefined' && 'haven' in window) {
+    return 'http://127.0.0.1:11434';
+  }
+  return 'http://127.0.0.1:11434';
 }
 
 function loadAuthTokens(): Record<string, string> {
@@ -278,29 +286,72 @@ class OllamaService {
 
   async connect(): Promise<boolean> {
     this.setStatus('connecting');
-    try {
-      const res = await fetch(`${this._baseUrl}/api/tags`, {
-        signal: AbortSignal.timeout(5000),
-        headers: this.authHeaders(),
-      });
-      if (!res.ok) throw new Error(`Ollama returned ${res.status}`);
-      const data = await res.json();
-      this.availableModels = data.models || [];
-      this.setStatus('connected');
 
-      // Start health check every 30s
-      this.stopHealthCheck();
-      this.healthCheckInterval = setInterval(() => this.healthPing(), 30_000);
+    // Strategy: try Electron IPC first, then Niyah Server, then Ollama direct
+    const backends = [
+      { name: 'electron-ipc', fn: () => this.tryElectronIPC() },
+      { name: 'niyah-server', fn: () => this.tryHttpBackend('http://127.0.0.1:7474') },
+      { name: 'ollama-127', fn: () => this.tryHttpBackend('http://127.0.0.1:11434') },
+      { name: 'ollama-localhost', fn: () => this.tryHttpBackend('http://localhost:11434') },
+    ];
 
-      return true;
-    } catch (err) {
-      this.setStatus('error');
-      this.emit('error', err instanceof Error ? err.message : 'Cannot reach Ollama');
-      return false;
+    for (const backend of backends) {
+      try {
+        const models = await backend.fn();
+        if (models && models.length > 0) {
+          this.availableModels = models;
+          this.setStatus('connected');
+          this.stopHealthCheck();
+          this.healthCheckInterval = setInterval(() => this.healthPing(), 30_000);
+          console.log(`[OllamaService] Connected via ${backend.name} — ${models.length} models`);
+          return true;
+        }
+      } catch {
+        // Try next backend
+      }
     }
+
+    this.setStatus('error');
+    this.emit('error', 'Cannot reach any AI backend (Niyah Server / Ollama)');
+    return false;
+  }
+
+  private async tryElectronIPC(): Promise<OllamaModel[] | null> {
+    if (typeof window === 'undefined' || !('haven' in window)) return null;
+    try {
+      const result = await (window as any).haven.ollama.models();
+      if (result && !result.error && Array.isArray(result)) {
+        return result;
+      }
+      if (result && result.models) return result.models;
+    } catch {}
+    return null;
+  }
+
+  private async tryHttpBackend(url: string): Promise<OllamaModel[] | null> {
+    const res = await fetch(`${url}/api/tags`, {
+      signal: AbortSignal.timeout(3000),
+      headers: this.authHeaders(),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const models = data.models || [];
+    if (models.length > 0) {
+      this._baseUrl = url;
+    }
+    return models.length > 0 ? models : null;
   }
 
   private async healthPing() {
+    // Try Electron IPC first
+    const ipcModels = await this.tryElectronIPC();
+    if (ipcModels && ipcModels.length > 0) {
+      this.availableModels = ipcModels;
+      this.setStatus('connected');
+      return;
+    }
+
+    // Try current base URL
     try {
       const res = await fetch(`${this._baseUrl}/api/tags`, {
         signal: AbortSignal.timeout(3000),
@@ -310,12 +361,24 @@ class OllamaService {
         const data = await res.json();
         this.availableModels = data.models || [];
         this.setStatus('connected');
-      } else {
-        this.setStatus('error');
+        return;
       }
-    } catch {
-      this.setStatus('disconnected');
+    } catch {}
+
+    // Try fallback URLs
+    for (const url of ['http://127.0.0.1:7474', 'http://127.0.0.1:11434']) {
+      if (url === this._baseUrl) continue;
+      try {
+        const models = await this.tryHttpBackend(url);
+        if (models && models.length > 0) {
+          this.availableModels = models;
+          this.setStatus('connected');
+          return;
+        }
+      } catch {}
     }
+
+    this.setStatus('disconnected');
   }
 
   private stopHealthCheck() {
@@ -384,6 +447,23 @@ class OllamaService {
       const ok = await this.connect();
       if (!ok) return null;
     }
+
+    // Try Electron IPC path first (most reliable in desktop app)
+    if (typeof window !== 'undefined' && 'haven' in window) {
+      try {
+        const result = await (window as any).haven.ollama.generate(
+          req.model, req.prompt, req.system || ''
+        );
+        if (result && !result.error) {
+          return {
+            model: req.model,
+            response: result.response || result,
+            done: true,
+          } as OllamaGenerateResponse;
+        }
+      } catch {}
+    }
+
     const id = `gen-${Date.now()}`;
     const ac = new AbortController();
     this.abortControllers.set(id, ac);

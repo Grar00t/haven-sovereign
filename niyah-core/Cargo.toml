@@ -1,14 +1,17 @@
 [package]
 name = "niyah-core-bridge"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
+description = "Sovereign Niyah Bridge — Rust core for Haven IDE (Phalanx + Forensics + P2P)"
+authors = ["Sulaiman Alshammari <dragon403@khawrizm.sa>"]
+license = "MIT"
 
 [[bin]]
 name = "niyah-bridge"
 path = "bridge.rs"
 
 [dependencies]
-# Dependencies will be added as needed for forensics
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = "0.8"
+libc = "0.2"

@@ -327,20 +327,18 @@ function OutputPanel() {
 
   const logs = useMemo(() => {
     const now = startTime.current;
+    const isElectron = typeof window !== 'undefined' && 'haven' in window;
     return [
       { time: now, msg: 'HAVEN IDE v5.0 — Sovereign Edition initialized', type: 'info' as const },
-      { time: now, msg: `Monaco Editor engine loaded (${openTabs.length} editor${openTabs.length !== 1 ? 's' : ''} active)`, type: 'info' as const },
-      { time: now, msg: `Theme applied: ${themeName}`, type: 'info' as const },
-      { time: now, msg: `File system: ${isRealFS ? 'LIVE — Connected to real OS filesystem' : 'Virtual — In-memory project tree'}`, type: isRealFS ? 'success' as const : 'info' as const },
-      { time: now, msg: `Project tree: ${countFiles(files)} files loaded`, type: 'info' as const },
-      { time: now, msg: 'TypeScript IntelliSense: ready', type: 'success' as const },
-      { time: now, msg: 'ESLint: workspace scanning complete', type: 'success' as const },
-      { time: now, msg: 'Prettier: default formatter registered', type: 'info' as const },
-      { time: now, msg: 'HAVEN AI Copilot: model loaded (Llama-405B sovereign instance)', type: 'success' as const },
-      { time: now, msg: 'Phalanx Security: background scan enabled', type: 'info' as const },
-      { time: now, msg: 'IndexedDB: session persistence active', type: 'info' as const },
-      { time: now, msg: 'Extensions: 6 active', type: 'info' as const },
-      { time: now, msg: 'Ready — all systems sovereign', type: 'success' as const },
+      { time: now, msg: `Editor: Monaco (${openTabs.length} tab${openTabs.length !== 1 ? 's' : ''} open)`, type: 'info' as const },
+      { time: now, msg: `Theme: ${themeName}`, type: 'info' as const },
+      { time: now, msg: `Filesystem: ${isRealFS ? 'LIVE (Electron IPC → OS)' : 'Virtual (in-memory)'}`, type: isRealFS ? 'success' as const : 'info' as const },
+      { time: now, msg: `Project: ${countFiles(files)} files indexed`, type: 'info' as const },
+      { time: now, msg: `Runtime: ${isElectron ? 'Electron (desktop)' : 'Browser (web)'}`, type: 'info' as const },
+      { time: now, msg: `Ollama: checking 127.0.0.1:11434...`, type: 'info' as const },
+      { time: now, msg: 'Niyah Engine: Three-Lobe architecture ready', type: 'success' as const },
+      { time: now, msg: 'Phalanx: sovereign mode active', type: 'success' as const },
+      { time: now, msg: 'Ready', type: 'success' as const },
     ];
   }, [openTabs.length, themeName, isRealFS, files]);
 
@@ -370,21 +368,49 @@ function countFiles(nodes: import('../types').FileNode[]): number {
 // ── Debug Console Panel ─────────────────────────────────────────
 function DebugConsolePanel() {
   const { currentTheme } = useIDEStore();
+  const [history, setHistory] = React.useState<{ input: string; output: string; isError: boolean }[]>([]);
+  const [cmd, setCmd] = React.useState('');
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const runEval = () => {
+    if (!cmd.trim()) return;
+    let output: string;
+    let isError = false;
+    try {
+      const result = Function('"use strict"; return (' + cmd + ')')();
+      output = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
+    } catch (e) {
+      output = String(e);
+      isError = true;
+    }
+    setHistory(prev => [...prev, { input: cmd, output, isError }]);
+    setCmd('');
+    setTimeout(() => scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight), 50);
+  };
+
   return (
-    <div role="tabpanel" className="flex-1 overflow-y-auto px-4 py-4 flex flex-col items-center justify-center">
-      <div className="text-center space-y-3">
-        <Bug size={28} className="mx-auto opacity-20" style={{ color: currentTheme.textMuted }} />
-        <p className="text-xs" style={{ color: currentTheme.textMuted }}>No debug session active</p>
-        <p className="text-[10px] opacity-40" style={{ color: currentTheme.textMuted }}>
-          Configure a launch.json to start debugging
-        </p>
-        <button
-          className="mt-2 text-[10px] px-3 py-1 rounded inline-flex items-center gap-1.5 mx-auto"
-          style={{ backgroundColor: currentTheme.accent + '15', color: currentTheme.accent, border: `1px solid ${currentTheme.accent}30` }}
-        >
-          <Play size={10} />
-          Create launch.json
-        </button>
+    <div role="tabpanel" className="flex-1 flex flex-col overflow-hidden">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 font-mono text-xs space-y-1" style={{ color: currentTheme.text }}>
+        {history.length === 0 && (
+          <p className="opacity-30 py-2">Debug Console — type JavaScript expressions below</p>
+        )}
+        {history.map((h, i) => (
+          <div key={i}>
+            <div className="flex gap-1"><span style={{ color: currentTheme.accent }}>{'>'}</span><span>{h.input}</span></div>
+            <div className="pl-3" style={{ color: h.isError ? '#ef4444' : '#22c55e' }}>{h.output}</div>
+          </div>
+        ))}
+      </div>
+      <div className="px-2 py-1 border-t flex items-center gap-1" style={{ borderColor: currentTheme.border }}>
+        <span className="text-xs font-mono" style={{ color: currentTheme.accent }}>{'>'}</span>
+        <input
+          value={cmd}
+          onChange={e => setCmd(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && runEval()}
+          placeholder="Evaluate expression..."
+          className="flex-1 bg-transparent outline-none text-xs font-mono"
+          style={{ color: currentTheme.text }}
+        />
       </div>
     </div>
   );

@@ -208,8 +208,8 @@ export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
     name: 'Cognitive Lobe',
     nameAr: 'الفص المعرفي',
     emoji: '🧠',
-    model: 'deepseek-coder-v2',
-    fallbackModel: 'deepseek-coder:6.7b',
+    model: 'niyah:sovereign',
+    fallbackModel: 'deepseek-r1:1.5b',
     description: 'Code generation, debugging, optimization, and technical reasoning',
     systemPrompt: COGNITIVE_SYSTEM,
     temperature: 0.3,
@@ -221,8 +221,8 @@ export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
     name: 'Executive Lobe',
     nameAr: 'الفص التنفيذي',
     emoji: '⚖️',
-    model: 'phi4',
-    fallbackModel: 'phi3',
+    model: 'deepseek-r1:1.5b',
+    fallbackModel: 'niyah:v4',
     description: 'Planning, security review, architecture, PDPL compliance',
     systemPrompt: EXECUTIVE_SYSTEM,
     temperature: 0.5,
@@ -234,9 +234,9 @@ export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
     name: 'Sensory Lobe',
     nameAr: 'الفص الحسي',
     emoji: '⚙️',
-    model: 'qwen2.5-coder',
-    fallbackModel: 'qwen2.5',
-    description: 'Arabic NLP, intent analysis, content generation, cultural context',
+    model: 'niyah:writer',
+    fallbackModel: 'niyah:sovereign',
+    description: 'Natural conversation, Arabic NLP, intent analysis, content generation',
     systemPrompt: SENSORY_SYSTEM,
     temperature: 0.6,
     maxTokens: 1536,
@@ -937,6 +937,10 @@ class ModelRouter {
     const config = LOBE_CONFIGS[lobeId];
     if (ollamaService.hasModel(config.model)) return config.model;
     if (ollamaService.hasModel(config.fallbackModel)) return config.fallbackModel;
+    const knownGood = ['niyah:sovereign', 'niyah:writer', 'niyah:latest', 'llama3.2:3b', 'deepseek-r1:1.5b', 'niyah:v4', 'niyah:v3'];
+    for (const m of knownGood) {
+      if (ollamaService.hasModel(m)) return m;
+    }
     const models = ollamaService.getModels();
     return models.length > 0 ? models[0].name : config.model;
   }

@@ -162,7 +162,7 @@ export function CasperAssistant() {
 
     try {
       let responseText = '';
-      let model = 'niyah:v4';
+      let model = 'niyah:sovereign';
 
       // Try Electron bridge first, then direct fetch
       if (typeof window !== 'undefined' && 'haven' in window) {
@@ -179,7 +179,7 @@ export function CasperAssistant() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'niyah:v4',
+              model: 'niyah:sovereign',
               prompt: `User: ${userMsg.content}\nHaven:`,
               system: 'You are Haven, the AI companion in HAVEN IDE. Be helpful, precise, and concise. Respond in English unless the user writes in another language.',
               stream: false,

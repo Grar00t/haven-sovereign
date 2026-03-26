@@ -271,10 +271,14 @@ export function AIPanel() {
     abortRef.current = false;
 
     // Build context from active editor tab + attached file
+    // Only include code context when the query is about code (not greetings/general chat)
+    const isCodeQuery = /\b(code|fix|bug|error|write|build|create|function|class|import|export|refactor|optimize|test|debug|explain.*code|\/\w+)\b/i.test(query)
+      || /[\u0627\u0628\u063A\u0633\u0648](كود|برمج|اكتب|سوي|صلح|خطأ)/i.test(query);
+
     const context: Record<string, string | undefined> = {
       activeFile: activeTab?.name,
       language: activeTab?.language || undefined,
-      selectedCode: activeTab?.content?.slice(0, 2000) || undefined,
+      selectedCode: isCodeQuery ? activeTab?.content?.slice(0, 2000) || undefined : undefined,
     };
     if (attachedFile) {
       context.attachedFileName = attachedFile.name;

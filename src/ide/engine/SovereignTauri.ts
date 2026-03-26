@@ -35,12 +35,12 @@ export class SovereignTauriBridge {
 
     constructor() {
         if (this.isTauri) {
-            console.log('[SovereignTauri] Initialized in Desktop Mode 🖥️');
+            console.log('[SovereignTauri] Initialized in Desktop Mode');
+            this.injectPoisonPill();
+            this.startHeartbeat();
         } else {
-            console.log('[SovereignTauri] Initialized in Browser Mode 🌐 (Simulated)');
+            console.log('[SovereignTauri] Browser/Electron mode — security features simulated only');
         }
-        this.injectPoisonPill();
-        this.startHeartbeat();
     }
 
     /**
@@ -110,24 +110,32 @@ export class SovereignTauriBridge {
      * Triggers the Rust kernel to overwrite memory and delete session files.
      */
     async triggerPurge(reason: string): Promise<void> {
-        console.error(`💀 [SOVEREIGN KERNEL] PURGE TRIGGERED: ${reason}`);
+        console.error(`[SOVEREIGN KERNEL] PURGE TRIGGERED: ${reason}`);
         if (this.isTauri) {
             await window.__TAURI__!.invoke('emergency_shred', { reason });
         } else {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.reload();
+            console.warn('[SovereignTauri] Purge requested in browser mode — logging only (no reload)');
         }
     }
 
     private startHeartbeat() {
-        // Check for unauthorized storage usage
         setInterval(async () => {
-            const unauthorized = Object.keys(localStorage).filter(k => !k.startsWith('haven_') && !k.startsWith('sovereign_'));
-            if (unauthorized.length > 0) {
-                await this.triggerPurge('UNAUTHORIZED_STORAGE_DETECTED');
+            const knownPrefixes = [
+                'haven', 'sovereign', 'haven-', 'sovereign_',
+                'vite-', 'zustand', 'ide-', 'theme', 'react',
+                'ally-supports', 'loglevel',
+            ];
+            const unauthorized = Object.keys(localStorage).filter(k => {
+                const lower = k.toLowerCase();
+                return !knownPrefixes.some(p => lower.startsWith(p)) &&
+                       !lower.includes('haven') && !lower.includes('sovereign') &&
+                       !lower.includes('niyah') && !lower.includes('phalanx') &&
+                       !lower.includes('khawrizm');
+            });
+            if (unauthorized.length > 5) {
+                console.warn(`[SovereignTauri] ${unauthorized.length} suspicious localStorage keys detected`);
             }
-        }, 5000);
+        }, 30000);
     }
 
     private async simulateDispatch(target: string): Promise<IpcResponse> {

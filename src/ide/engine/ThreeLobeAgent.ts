@@ -34,6 +34,8 @@ export interface AgentContext {
   selectedCode?: string;
   recentFiles?: string[];
   openFiles?: string[];
+  attachedFileName?: string;
+  attachedFileContent?: string;
 }
 
 export interface LobeStatus {
@@ -437,10 +439,12 @@ class ThreeLobeAgent {
       messages.push({ role: 'system', content: niyahXml });
     }
 
-    // Build user message with code context
+    // Build user message with code context + attached file
     let userContent = input;
 
-    if (context.selectedCode) {
+    if (context.attachedFileContent) {
+      userContent = `Attached file (${context.attachedFileName || 'file'}):\n\`\`\`\n${context.attachedFileContent}\n\`\`\`\n\n${input}`;
+    } else if (context.selectedCode) {
       userContent = `Selected code:\n\`\`\`${context.language || ''}\n${context.selectedCode}\n\`\`\`\n\n${input}`;
     }
 

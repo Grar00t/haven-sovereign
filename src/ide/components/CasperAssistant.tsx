@@ -1,10 +1,9 @@
 /**
- * CASPER — The Ghost AI Assistant
- * كاسبر — الشبح الذكي
+ * HAVEN — Your AI Companion
  * 
- * A floating AI assistant inspired by Casper the Friendly Ghost.
- * It moves freely, serves the user with voice/text/code assistance,
- * and integrates with Niyah Engine's Three-Lobe architecture.
+ * A floating AI assistant that moves freely, serves the user with
+ * voice/text/code assistance, and integrates with Niyah Engine's
+ * Three-Lobe architecture.
  * 
  * KHAWRIZM Labs — Dragon403
  */
@@ -30,11 +29,9 @@ interface CasperPosition {
   y: number;
 }
 
-const CASPER_PERSONALITY = {
-  greeting_ar: 'مرحباً! أنا كاسبر، الشبح الودود. كيف أقدر أساعدك اليوم؟',
-  greeting_en: "Hey! I'm Casper, your friendly ghost assistant. How can I help?",
-  thinking_ar: 'أفكر...',
-  thinking_en: 'Thinking...',
+const HAVEN_PERSONALITY = {
+  greeting: "Hey. I'm Haven — your AI companion.\n\nAsk me anything. Code, architecture, security — or just say hi. I don't bite. I'm a ghost.",
+  thinking: 'Thinking...',
 };
 
 const LOBE_COLORS = {
@@ -49,7 +46,7 @@ export function CasperAssistant() {
     {
       id: 'welcome',
       role: 'casper',
-      content: CASPER_PERSONALITY.greeting_ar + '\n\n' + CASPER_PERSONALITY.greeting_en,
+      content: HAVEN_PERSONALITY.greeting,
       lobe: 'sensory',
       timestamp: Date.now(),
     },
@@ -171,8 +168,8 @@ export function CasperAssistant() {
       if (typeof window !== 'undefined' && 'haven' in window) {
         const result = await (window as any).haven.ollama.generate(
           model,
-          `User: ${userMsg.content}\nCasper:`,
-          `You are Casper (كاسبر), the friendly ghost AI assistant in HAVEN IDE. You are helpful, precise, and a bit playful. Built by KHAWRIZM Labs. Respond in the same language the user uses. For code, always provide complete examples.`
+          `User: ${userMsg.content}\nHaven:`,
+          `You are Haven, the user's AI companion inside HAVEN IDE. You are helpful, precise, and concise. Built by KHAWRIZM Labs in Riyadh. Always respond in English unless the user writes in another language. For code, provide complete examples.`
         );
         responseText = result?.response || result?.error || 'Ollama is not responding';
         model = result?.model || model;
@@ -183,8 +180,8 @@ export function CasperAssistant() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               model: 'niyah:v4',
-              prompt: `User: ${userMsg.content}\nCasper:`,
-              system: 'You are Casper, the friendly ghost AI in HAVEN IDE. Be helpful and precise.',
+              prompt: `User: ${userMsg.content}\nHaven:`,
+              system: 'You are Haven, the AI companion in HAVEN IDE. Be helpful, precise, and concise. Respond in English unless the user writes in another language.',
               stream: false,
               options: { temperature: 0.3, num_predict: 4096 },
             }),
@@ -210,6 +207,15 @@ export function CasperAssistant() {
       };
 
       setMessages(prev => [...prev, casperMsg]);
+
+      if (soundEnabled && responseText.trim() && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(responseText.trim().slice(0, 500));
+        utterance.lang = /[\u0600-\u06FF]/.test(responseText) ? 'ar-SA' : 'en-US';
+        utterance.rate = 1.0;
+        utterance.volume = 0.8;
+        window.speechSynthesis.speak(utterance);
+      }
     } catch (err) {
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
@@ -233,7 +239,7 @@ export function CasperAssistant() {
 
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA';
+    recognition.lang = 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -270,7 +276,7 @@ export function CasperAssistant() {
           transition: 'all 0.3s ease',
           boxShadow: `0 4px 20px ${currentTheme.accent}30`,
         }}
-        title="Casper — الشبح الذكي"
+        title="Haven — AI Companion"
       >
         <Ghost size={28} style={{ color: currentTheme.accent }} className="group-hover:scale-110 transition-transform" />
         {ollamaStatus === 'online' && (
@@ -305,7 +311,7 @@ export function CasperAssistant() {
         <div className="flex items-center gap-2">
           <Ghost size={18} style={{ color: currentTheme.accent }} />
           <span className="font-semibold text-sm" style={{ color: currentTheme.text }}>
-            Casper
+            Haven
           </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full"
             style={{
@@ -373,7 +379,7 @@ export function CasperAssistant() {
             <div className="rounded-xl px-3 py-2 text-[13px]"
               style={{ background: currentTheme.sidebar, color: currentTheme.textMuted }}>
               <Loader2 size={14} className="animate-spin inline mr-2" />
-              {CASPER_PERSONALITY.thinking_ar}
+              {HAVEN_PERSONALITY.thinking}
             </div>
           </div>
         )}
@@ -397,7 +403,7 @@ export function CasperAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="اسأل كاسبر أي شي..."
+            placeholder="Ask Haven anything..."
             className="flex-1 bg-transparent outline-none text-[13px]"
             style={{ color: currentTheme.text }}
           />

@@ -277,6 +277,11 @@ class OllamaService {
   getStatus(): ConnectionStatus { return this.status; }
   getModels(): OllamaModel[] { return [...this.availableModels]; }
 
+  isLocalEndpoint(): boolean {
+    const url = this._baseUrl.toLowerCase();
+    return url.includes('localhost') || url.includes('127.0.0.1');
+  }
+
   private setStatus(s: ConnectionStatus) {
     if (this.status !== s) {
       this.status = s;

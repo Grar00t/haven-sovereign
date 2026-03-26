@@ -6,7 +6,7 @@ import { ollamaService, type ConnectionStatus } from '../engine/OllamaService';
 import { getFIMCacheSize } from '../engine/NiyahCompletionProvider';
 import {
   Sparkles, Send, Bot, User, Copy, Check,
-  Code2, Zap, Wrench, BookOpen,
+  Code2, Zap, Wrench, BookOpen, Paperclip, X,
   Brain, Shield, GitGraph, Loader2, Wifi, WifiOff,
   CircleDot, StopCircle, Activity, Database, ChevronDown, ChevronUp,
 } from 'lucide-react';
@@ -213,10 +213,24 @@ export function AIPanel() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [showGraph, setShowGraph] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeTab = useMemo(() => openTabs.find(t => t.id === activeTabId), [openTabs, activeTabId]);
+
+  const handleFileAttach = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      setAttachedFile({ name: file.name, content: text });
+    } catch {
+      setAttachedFile({ name: file.name, content: '[Binary file — cannot read as text]' });
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
 
   // ── Connect to Ollama on mount ─────────────────────────────
   useEffect(() => {
@@ -256,12 +270,17 @@ export function AIPanel() {
     setStreamContent('');
     abortRef.current = false;
 
-    // Build context from active editor tab
-    const context = {
+    // Build context from active editor tab + attached file
+    const context: Record<string, string | undefined> = {
       activeFile: activeTab?.name,
       language: activeTab?.language || undefined,
       selectedCode: activeTab?.content?.slice(0, 2000) || undefined,
     };
+    if (attachedFile) {
+      context.attachedFileName = attachedFile.name;
+      context.attachedFileContent = attachedFile.content.slice(0, 8000);
+      setAttachedFile(null);
+    }
 
     let accumulated = '';
 
@@ -515,17 +534,39 @@ export function AIPanel() {
         </div>
       )}
 
+      {/* Attached file chip */}
+      {attachedFile && (
+        <div className="px-3 py-1 flex items-center gap-1.5 border-t text-[10px]" style={{ borderColor: currentTheme.border + '60', color: currentTheme.accent }}>
+          <Paperclip size={10} />
+          <span className="truncate max-w-[180px]">{attachedFile.name}</span>
+          <span style={{ color: currentTheme.textMuted }}>({Math.round(attachedFile.content.length / 1024)}KB)</span>
+          <button onClick={() => setAttachedFile(null)} className="ml-auto p-0.5 rounded hover:bg-white/10">
+            <X size={10} style={{ color: currentTheme.textMuted }} />
+          </button>
+        </div>
+      )}
+
       {/* Input */}
       <form
         onSubmit={handleSubmit}
         className="p-2 border-t"
         style={{ borderColor: currentTheme.border }}
       >
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileAttach}
+          accept=".txt,.md,.ts,.tsx,.js,.jsx,.py,.rs,.c,.cpp,.h,.json,.yaml,.yml,.toml,.html,.css,.sh,.sql,.go,.java,.php,.rb,.swift,.kt,.xml,.csv,.log,.env,.conf,.cfg" />
         <div
           className="flex items-center gap-2 rounded-lg px-3 py-2"
           style={{ backgroundColor: currentTheme.bg, border: `1px solid ${currentTheme.border}` }}
         >
-          <Sparkles size={13} style={{ color: currentTheme.accent, opacity: 0.5 }} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1 rounded transition-colors hover:bg-white/10"
+            style={{ color: currentTheme.textMuted }}
+            title="Attach file"
+          >
+            <Paperclip size={13} />
+          </button>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}

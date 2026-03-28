@@ -26,3 +26,8 @@ dist/
 .next/
 *.pem
 *.key
+
+.env
+.env.local
+.venv/
+node_modules/

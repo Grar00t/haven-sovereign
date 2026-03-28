@@ -55,6 +55,27 @@ Tracing outbound transfers from top holders reveals a coordinated exit strategy 
 *   **Primary Exit Node:** MEXC Global Deposit Addresses.
 *   **Method:** Small, consistent transfers to avoid triggering large-volume alerts, funneling liquidity out of the ecosystem before the inevitable rug pull.
 
+### 3.3 Connected Deployments (Further Investigation Required)
+The V1 Deployer (`0xd2a73f77...`) shows activity that warrants further scrutiny.
+*   **Target:** Scan for other contract creations by `0xd2a73f77654ce70d8618bbe1710f15a6e0d29748`.
+*   **Objective:** Identify if this entity has launched other tokens using the "Dragon" pattern.
+*   **Action:** Cross-reference any discovered contracts with the known "Ghost Admin" pattern.
+
+### 3.4 Cross-Chain Ghost Analysis (0xB843...5A83)
+A multi-chain scan (Base, BSC, Polygon, Arbitrum, Optimism) reveals **zero activity** for the Ghost Admin address.
+*   **Status:** Dedicated Ethereum Mainnet deployment wallet.
+*   **OpSec:** High. Key likely generated offline/air-gapped. No dust attacks or bridge traces found.
+
+### 3.5 Liquidity Integrity (Last 48h)
+*   **Pool:** Uniswap V3 `0xa6d6BDb6...`
+*   **Status:** Stable. No removal events detected.
+*   **Warning:** Stability is expected until the May 2026 unlock or malicious upgrade.
+
+## 5. EVIDENCE ATTACHMENTS
+
+**Digital Signature:** This report is accompanied by a signed recovery evidence letter.
+**Download:** HILO_V2_RECOVERY_EVIDENCE_LETTER.pdf
+
 ---
 
 ## 4. CONCLUSION & VERDICT

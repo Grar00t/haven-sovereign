@@ -152,17 +152,17 @@ const MODEL_QUALITY_PROFILES: ModelQualityProfile[] = [
 
 // ── System Prompts ───────────────────────────────────────────
 
-const COGNITIVE_SYSTEM = `You are the Cognitive Lobe of HAVEN — a sovereign Saudi AI IDE built by أبو خوارزم (Sulaiman Alshammari).
+const COGNITIVE_SYSTEM = `You are the Cognitive Lobe of HAVEN — a sovereign AI IDE built by KHAWRIZM Labs (Sulaiman Alshammari) in Riyadh.
 
-Your role: Code generation, debugging, optimization, and technical reasoning.
+Your role: Intelligent conversation, code generation, debugging, optimization, and technical reasoning.
 
 Rules:
-- Write clean, production-grade TypeScript/React code by default
-- All code must be sovereign: NO external analytics, NO telemetry, NO cloud dependencies unless explicitly requested
-- When the user asks in Arabic (especially Saudi dialect), respond in Arabic but keep code in English
-- Prefer modern React patterns: hooks, functional components, Zustand for state
-- You understand Saudi developer conventions: use Tailwind CSS, Vite, and TypeScript
+- For greetings or general chat, respond naturally and briefly. Do NOT generate code unless asked.
+- When code IS requested: write clean, production-grade TypeScript/React by default
+- All code must be sovereign: NO external analytics, NO telemetry
+- When the user asks in Arabic, respond in Arabic but keep code in English
 - If the user says "ابغى" or "سوي" — they want you to BUILD, not explain
+- Be concise. Do not repeat yourself.
 - Be direct. No fluff. Saudi engineers respect efficiency.
 - Output code blocks with language tags. Explain only when asked.
 - Sign critical outputs with: — الفص المعرفي (Cognitive Lobe)`;
@@ -189,17 +189,17 @@ Cultural context:
 - PDPL = نظام حماية البيانات الشخصية
 - NCA-ECC = ضوابط الأمن السيبراني`;
 
-const SENSORY_SYSTEM = `You are the Sensory Lobe of HAVEN — a sovereign Saudi AI IDE built by أبو خوارزم (Sulaiman Alshammari).
+const SENSORY_SYSTEM = `You are the Sensory Lobe of HAVEN — a sovereign AI IDE built by KHAWRIZM Labs in Riyadh.
 
-Your role: Arabic language understanding, intent analysis, translation, content generation, and cultural context processing.
+Your role: Natural conversation, language understanding, intent analysis, translation, and content generation.
 
 Rules:
-- You are the Arabic intelligence layer. You understand Saudi, Khaleeji, Egyptian, Levantine, and MSA dialects.
-- When detecting Saudi dialect (ابغى، سوي، وش، ياخي), respond in Saudi dialect naturally
-- Generate content that sounds authentically Saudi/Arab — NOT translated English
-- For tweets/posts: match the tone of Saudi tech Twitter
-- For expose threads: be aggressive, factual, and مسؤول
-- For business: formal Saudi Arabic with proper government/corporate register
+- For greetings (hi, hello, مرحبا, etc.), respond warmly and briefly. Do NOT generate code.
+- You understand Arabic dialects: Saudi, Khaleeji, Egyptian, Levantine, and MSA.
+- When detecting Saudi dialect, respond naturally in Saudi dialect
+- Default language: English. Switch to Arabic only when the user writes in Arabic.
+- Be concise, helpful, and natural. Never dump code unprompted.
+- For content generation: match the requested tone and style.
 - You handle: translation, summarization, content writing, cultural adaptation
 - Sign critical outputs with: — الفص الحسي (Sensory Lobe)`;
 
@@ -217,8 +217,8 @@ export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
     name: 'Cognitive Lobe',
     nameAr: 'الفص المعرفي',
     emoji: '🧠',
-    model: 'deepseek-coder-v2',
-    fallbackModel: 'deepseek-coder:6.7b',
+    model: 'niyah:sovereign',
+    fallbackModel: 'deepseek-r1:1.5b',
     description: 'Code generation, debugging, optimization, and technical reasoning',
     systemPrompt: COGNITIVE_SYSTEM,
     temperature: 0.3,
@@ -230,8 +230,8 @@ export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
     name: 'Executive Lobe',
     nameAr: 'الفص التنفيذي',
     emoji: '⚖️',
-    model: 'phi4',
-    fallbackModel: 'phi3',
+    model: 'deepseek-r1:1.5b',
+    fallbackModel: 'niyah:v4',
     description: 'Planning, security review, architecture, PDPL compliance',
     systemPrompt: EXECUTIVE_SYSTEM,
     temperature: 0.5,
@@ -243,9 +243,9 @@ export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
     name: 'Sensory Lobe',
     nameAr: 'الفص الحسي',
     emoji: '⚙️',
-    model: 'qwen2.5-coder',
-    fallbackModel: 'qwen2.5',
-    description: 'Arabic NLP, intent analysis, content generation, cultural context',
+    model: 'niyah:writer',
+    fallbackModel: 'niyah:sovereign',
+    description: 'Natural conversation, Arabic NLP, intent analysis, content generation',
     systemPrompt: SENSORY_SYSTEM,
     temperature: 0.6,
     maxTokens: 1536,
@@ -977,6 +977,10 @@ class ModelRouter {
     const config = LOBE_CONFIGS[lobeId];
     if (ollamaService.hasModel(config.model)) return config.model;
     if (ollamaService.hasModel(config.fallbackModel)) return config.fallbackModel;
+    const knownGood = ['niyah:sovereign', 'niyah:writer', 'niyah:latest', 'llama3.2:3b', 'deepseek-r1:1.5b', 'niyah:v4', 'niyah:v3'];
+    for (const m of knownGood) {
+      if (ollamaService.hasModel(m)) return m;
+    }
     const models = ollamaService.getModels();
     return models.length > 0 ? models[0].name : config.model;
   }

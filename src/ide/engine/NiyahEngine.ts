@@ -1038,6 +1038,11 @@ export const sovereignLogin = async (creds: Credentials) => {
 };`;
 
   private generateCodeResponse(vector: NiyahVector, isSaudi: boolean, intent: string, context?: { activeFile?: string; language?: string }): string {
+    const isGreeting = /^(hi|hello|hey|مرحبا|السلام|هلا|كيف|اهلا|سلام|شلون)\b/i.test(intent.trim());
+    if (isGreeting) {
+      return this.generateGeneralResponse(vector, isSaudi, intent);
+    }
+
     const file = context?.activeFile || 'current workspace';
     const lang = context?.language || 'TypeScript';
     const isLogin = intent.includes('لوجن') || intent.includes('login') || intent.includes('auth') || intent.includes('دخول') || intent.includes('تسجيل');

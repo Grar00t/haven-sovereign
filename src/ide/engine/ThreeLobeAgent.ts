@@ -34,7 +34,12 @@ export interface AgentContext {
   selectedCode?: string;
   recentFiles?: string[];
   openFiles?: string[];
+<<<<<<< HEAD
   forceFullThreeLobe?: boolean;
+=======
+  attachedFileName?: string;
+  attachedFileContent?: string;
+>>>>>>> 4d69da7ded22e131bcf451ba91ae11e28e036300
 }
 
 export interface LobeStatus {
@@ -703,11 +708,13 @@ class ThreeLobeAgent {
       messages.push({ role: 'system', content: niyahXml });
     }
 
-    // Build user message with code context
+    // Build user message — only inject code when the query is actually about code
     let userContent = input;
 
-    if (context.selectedCode) {
-      userContent = `Selected code:\n\`\`\`${context.language || ''}\n${context.selectedCode}\n\`\`\`\n\n${input}`;
+    if (context.attachedFileContent) {
+      userContent = `Attached file (${context.attachedFileName || 'file'}):\n\`\`\`\n${context.attachedFileContent}\n\`\`\`\n\n${input}`;
+    } else if (context.selectedCode && input.length > 5) {
+      userContent = `Context (${context.activeFile || 'file'}):\n\`\`\`${context.language || ''}\n${context.selectedCode}\n\`\`\`\n\n${input}`;
     }
 
     messages.push({ role: 'user', content: userContent });

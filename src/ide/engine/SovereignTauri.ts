@@ -151,13 +151,18 @@ export class SovereignTauriBridge {
     ];
 
     constructor() {
+<<<<<<< HEAD
         if (this.isDesktop) {
             console.log('[SovereignTauri] Initialized in Desktop Mode 🖥️');
+=======
+        if (this.isTauri) {
+            console.log('[SovereignTauri] Initialized in Desktop Mode');
+            this.injectPoisonPill();
+            this.startHeartbeat();
+>>>>>>> 4d69da7ded22e131bcf451ba91ae11e28e036300
         } else {
-            console.log('[SovereignTauri] Initialized in Browser Mode 🌐 (Simulated)');
+            console.log('[SovereignTauri] Browser/Electron mode — security features simulated only');
         }
-        this.injectPoisonPill();
-        this.startHeartbeat();
     }
 
     /**
@@ -473,6 +478,7 @@ export class SovereignTauriBridge {
      * Triggers the Rust kernel to overwrite memory and delete session files.
      */
     async triggerPurge(reason: string): Promise<void> {
+<<<<<<< HEAD
         console.error(`💀 [SOVEREIGN KERNEL] PURGE TRIGGERED: ${reason}`);
         if (this.isDesktop) {
             await this.invokeCommand<IpcResponse>('emergency_shred', { reason });
@@ -513,10 +519,18 @@ export class SovereignTauriBridge {
             if (this.isSuspiciousStorageKey(key)) {
                 sessionStorage.removeItem(key);
             }
+=======
+        console.error(`[SOVEREIGN KERNEL] PURGE TRIGGERED: ${reason}`);
+        if (this.isTauri) {
+            await window.__TAURI__!.invoke('emergency_shred', { reason });
+        } else {
+            console.warn('[SovereignTauri] Purge requested in browser mode — logging only (no reload)');
+>>>>>>> 4d69da7ded22e131bcf451ba91ae11e28e036300
         }
     }
 
     private startHeartbeat() {
+<<<<<<< HEAD
         // Check for telemetry-like storage keys without breaking normal app state.
         setInterval(async () => {
             const suspicious = Object.keys(localStorage).filter(key =>
@@ -525,8 +539,25 @@ export class SovereignTauriBridge {
 
             if (suspicious.length > 0) {
                 await this.triggerPurge('UNAUTHORIZED_STORAGE_DETECTED');
+=======
+        setInterval(async () => {
+            const knownPrefixes = [
+                'haven', 'sovereign', 'haven-', 'sovereign_',
+                'vite-', 'zustand', 'ide-', 'theme', 'react',
+                'ally-supports', 'loglevel',
+            ];
+            const unauthorized = Object.keys(localStorage).filter(k => {
+                const lower = k.toLowerCase();
+                return !knownPrefixes.some(p => lower.startsWith(p)) &&
+                       !lower.includes('haven') && !lower.includes('sovereign') &&
+                       !lower.includes('niyah') && !lower.includes('phalanx') &&
+                       !lower.includes('khawrizm');
+            });
+            if (unauthorized.length > 5) {
+                console.warn(`[SovereignTauri] ${unauthorized.length} suspicious localStorage keys detected`);
+>>>>>>> 4d69da7ded22e131bcf451ba91ae11e28e036300
             }
-        }, 5000);
+        }, 30000);
     }
 
     private async simulateDispatch(target: string): Promise<IpcResponse> {

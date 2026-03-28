@@ -7,6 +7,8 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Copy, Check, Zap, AlertTriangle, Download } from 'lucide-react';
+import { voiceService } from '../../ide/engine/VoiceService';
 
 // ── Types ────────────────────────────────────────────────────
 interface ChatMessage {
@@ -27,6 +29,7 @@ const HF_API_URL = import.meta.env.VITE_HF_API_URL || 'https://router.huggingfac
 const MODEL_CHAIN = [
   'niyah', // Local Sovereign AI (The Soul of NIYAH)
   'deepseek-r1:7b',
+  'Meta-Llama-3.1-405B-Instruct',
   'Meta-Llama-3.3-70B-Instruct',
 ];
 
@@ -236,8 +239,10 @@ function stripThinkTags(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 }
 
-async function askModel(messages: { role: string; content: string }[]): Promise<string> {
-  for (const model of MODEL_CHAIN) {
+async function askModel(messages: { role: string; content: string }[], force405B: boolean = false): Promise<string> {
+  const chain = force405B ? ['Meta-Llama-3.1-405B-Instruct'] : MODEL_CHAIN;
+
+  for (const model of chain) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 25000);
@@ -280,6 +285,62 @@ async function askModel(messages: { role: string; content: string }[]): Promise<
   }
   return '';
 }
+
+// ── Code Block Component ─────────────────────────────────────
+const CodeBlock = ({ code, lang }: { code: string; lang?: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const download = () => {
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `haven_snippet_${Date.now()}.${lang || 'txt'}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="relative mt-3 mb-3 rounded-lg overflow-hidden bg-black/40 border border-white/10 group font-mono text-left" dir="ltr">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-white/5 border-b border-white/5">
+        <span className="text-[10px] text-white/40 uppercase">{lang || 'code'}</span>
+        <div className="flex items-center gap-3">
+          <button onClick={download} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/90 transition-colors" title="Download">
+            <Download size={12} />
+            <span>Download</span>
+          </button>
+          <button onClick={copy} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/90 transition-colors" title="Copy">
+            {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+      </div>
+      <div className="p-3 overflow-x-auto">
+        <pre className="text-xs text-blue-100/90 leading-relaxed whitespace-pre font-mono m-0">
+          {code}
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+const renderMessageContent = (text: string) => {
+  const parts = text.split(/```(\w+)?\n([\s\S]*?)```/g);
+  return parts.map((part, i) => {
+    if (i % 3 === 0) return <span key={i} className="whitespace-pre-line">{part}</span>;
+    if (i % 3 === 1) return null; // Language capture
+    const lang = parts[i - 1];
+    return <CodeBlock key={i} code={part.trim()} lang={lang} />;
+  });
+};
 
 // ── True Casper Ghost SVG ────────────────────────────────────
 const CasperGhost = ({ mood, isHovered }: { mood: GhostMood; isHovered: boolean }) => {
@@ -511,6 +572,7 @@ export const HavenChat = () => {
   const [mood, setMood] = useState<GhostMood>('idle');
 
   // Spell states
+  const [force405B, setForce405B] = useState(false);
   const [ghostVisible, setGhostVisible] = useState(true);       // Spell 5: Ctrl+Shift+H toggle
   const [isSensitive, setIsSensitive] = useState(false);         // Spell 1: auto-hide on sensitive words
   const [driftMode, setDriftMode] = useState(false);             // Spell 2: physics bounce
@@ -522,7 +584,9 @@ export const HavenChat = () => {
   // Voice state
   const [isListening, setIsListening] = useState(false);
   const [speechLang, setSpeechLang] = useState<'en-US' | 'ar-SA'>('en-US');
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [modelLoadProgress, setModelLoadProgress] = useState<{ status: string; progress: number } | null>(null);
 
   // Refs
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -607,50 +671,51 @@ export const HavenChat = () => {
   }, []);
 
   // ── Voice Recognition Setup ────────────────────────────────
-  useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = speechLang;
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0]?.[0]?.transcript?.trim();
-      if (transcript) {
-        setInput(transcript);
-        // Auto-send after brief delay
-        setTimeout(() => {
-          const fakeInput = document.querySelector('[data-haven-input]') as HTMLInputElement;
-          if (fakeInput) {
-            fakeInput.value = transcript;
-            fakeInput.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        }, 100);
+  const toggleVoice = useCallback(async () => {
+    if (isListening) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
       }
       setIsListening(false);
-    };
-
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognitionRef.current = recognition;
-  }, [speechLang]);
-
-  const toggleVoice = useCallback(() => {
-    const rec = recognitionRef.current;
-    if (!rec) return;
-
-    if (isListening) {
-      rec.stop();
-      setIsListening(false);
     } else {
-      rec.lang = speechLang;
-      rec.start();
-      setIsListening(true);
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = recorder;
+        audioChunksRef.current = [];
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) audioChunksRef.current.push(event.data);
+        };
+
+        recorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+          setIsTyping(true); // Visual feedback during transcription
+          try {
+            const text = await voiceService.transcribe(audioBlob, (data) => {
+              if (data.status === 'progress') {
+                setModelLoadProgress({ status: data.file, progress: data.progress });
+              }
+            });
+            setModelLoadProgress(null);
+            if (text) setInput(prev => (prev ? prev + ' ' : '') + text);
+          } catch (err) {
+            console.error('Transcription failed:', err);
+          } finally {
+            setIsTyping(false);
+            stream.getTracks().forEach(t => t.stop()); // Clean up
+          }
+        };
+
+        recorder.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Microphone access denied:', err);
+      }
     }
-  }, [isListening, speechLang]);
+  }, [isListening]);
 
   // ── Auto-scroll ────────────────────────────────────────────
   useEffect(() => {
@@ -705,7 +770,7 @@ export const HavenChat = () => {
       setMood('thinking');
 
       const chatHistory = [{ role: 'user', content: `I am sharing a file: ${file.name} (${file.type}, ${formatFileSize(file.size)})\n\nContent:\n${content.slice(0, 2000)}` }];
-      askModel(chatHistory).then(reply => {
+      askModel(chatHistory, force405B).then(reply => {
         setMessages(prev => [...prev, {
           id: `g-${Date.now()}`,
           role: 'ghost',
@@ -743,7 +808,7 @@ export const HavenChat = () => {
       content: m.text,
     }));
 
-    const aiReply = await askModel(chatHistory);
+    const aiReply = await askModel(chatHistory, force405B);
 
     if (aiReply) {
       setMessages(prev => [...prev, {
@@ -754,6 +819,17 @@ export const HavenChat = () => {
       }]);
       setMood('happy');
     } else {
+      if (force405B) {
+        setMessages(prev => [...prev, {
+          id: `err-${Date.now()}`,
+          role: 'ghost',
+          text: '⚠️ **Error:** Model 405B is currently unavailable or overloaded. Please disable "Force 405B" or try again later.',
+          timestamp: Date.now(),
+        }]);
+        setMood('idle');
+        setIsTyping(false);
+        return;
+      }
       const localReply = getLocalResponse(text);
       setMessages(prev => [...prev, {
         id: `g-${Date.now()}`,
@@ -910,6 +986,13 @@ export const HavenChat = () => {
                 {/* Spells menu */}
                 <div className="flex gap-1">
                   <button
+                    onClick={() => setForce405B(v => !v)}
+                    className={`w-5 h-5 rounded text-[10px] flex items-center justify-center transition-all ${force405B ? 'bg-purple-500/20 text-purple-300' : 'text-white/15 hover:text-white/30'}`}
+                    title={force405B ? "Force 405B: ON (Ultimate Sovereignty)" : "Force 405B: OFF"}
+                  >
+                    <Zap size={12} className={force405B ? "fill-purple-300" : ""} />
+                  </button>
+                  <button
                     onClick={() => setDriftMode(v => !v)}
                     className={`w-5 h-5 rounded text-[10px] flex items-center justify-center transition-all ${driftMode ? 'bg-blue-500/20 text-blue-300' : 'text-white/15 hover:text-white/30'}`}
                     title="Drift mode (Ctrl+Shift+D)"
@@ -953,11 +1036,10 @@ export const HavenChat = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <div
-                    className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line leading-relaxed ${
-                      msg.role === 'ghost'
-                        ? 'bg-white/[0.04] border border-white/[0.06] text-white/90 rounded-tl-sm'
-                        : 'bg-blue-500/15 text-white/95 rounded-tr-sm'
-                    }`}
+                    className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line leading-relaxed ${msg.role === 'ghost'
+                      ? 'bg-white/[0.04] border border-white/[0.06] text-white/90 rounded-tl-sm'
+                      : 'bg-blue-500/15 text-white/95 rounded-tr-sm'
+                      }`}
                   >
                     {msg.file && (
                       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5 text-xs text-white/40">
@@ -966,7 +1048,7 @@ export const HavenChat = () => {
                         <span>({formatFileSize(msg.file.size)})</span>
                       </div>
                     )}
-                    {msg.text}
+                    {renderMessageContent(msg.text)}
                   </div>
                 </motion.div>
               ))}
@@ -988,6 +1070,23 @@ export const HavenChat = () => {
               )}
               <div ref={chatEndRef} />
             </div>
+
+            {/* Model Loading Progress Bar */}
+            {modelLoadProgress && (
+              <div className="px-4 py-2 bg-black/40 border-t border-white/5">
+                <div className="flex justify-between text-[9px] text-white/50 mb-1">
+                  <span>Loading Whisper Model...</span>
+                  <span>{Math.round(modelLoadProgress.progress)}%</span>
+                </div>
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-blue-400"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${modelLoadProgress.progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Status bar */}
             <div className="flex items-center justify-between px-4 py-1.5 text-[9px] text-white/15 relative z-10 border-t border-white/[0.04]">
@@ -1025,11 +1124,10 @@ export const HavenChat = () => {
                 {/* Voice button */}
                 <button
                   onClick={toggleVoice}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                    isListening
-                      ? 'text-red-400 bg-red-500/10 animate-pulse'
-                      : 'text-white/20 hover:text-white/50 hover:bg-white/5'
-                  }`}
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${isListening
+                    ? 'text-red-400 bg-red-500/10 animate-pulse'
+                    : 'text-white/20 hover:text-white/50 hover:bg-white/5'
+                    }`}
                   title={`Voice input (${speechLang === 'en-US' ? 'English' : 'عربي'})`}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

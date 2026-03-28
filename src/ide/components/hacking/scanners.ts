@@ -178,39 +178,43 @@ export async function scanLocalStorage(): Promise<string[]> {
 /** 3. WebRTC IP Leak Detector — checks if your real IP leaks */
 export async function detectWebRTCLeak(): Promise<string[]> {
   const lines: string[] = [
-    '[*] DRAGON WEBRTC LEAK DETECTOR v2.0 — REAL SCAN',
-    '[*] Creating RTCPeerConnection to detect IP leaks...',
+    '[*] DRAGON WEBRTC CANDIDATE AUDIT v2.0 — LOCAL-ONLY SCAN',
+    '[*] Creating RTCPeerConnection without third-party STUN servers...',
     '',
   ];
 
   return new Promise<string[]>(resolve => {
     const foundIPs = new Set<string>();
+    let mdnsCandidates = 0;
     const timeout = setTimeout(() => finalize(), 5000);
 
     function finalize() {
       clearTimeout(timeout);
-      if (foundIPs.size === 0) {
-        lines.push('[+] ✅ No IP addresses leaked via WebRTC');
-        lines.push('[+] Your browser blocks WebRTC IP enumeration.');
+      if (foundIPs.size === 0 && mdnsCandidates === 0) {
+        lines.push('[+] ✅ No local ICE candidates were exposed via WebRTC');
+        lines.push('[+] Your browser appears to minimize candidate disclosure.');
         lines.push('[+] 🇸🇦 PRIVACY STATUS: STRONG');
       } else {
         lines.push('');
-        lines.push(`[!] ⚠️  ${foundIPs.size} IP addresses exposed via WebRTC:`);
+        lines.push('[*] LOCAL CANDIDATE SUMMARY:');
         for (const ip of foundIPs) {
           const isLocal = ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.');
-          const isIPv6 = ip.includes(':');
           if (isLocal) {
-            lines.push(`[*]    ${ip} — LOCAL NETWORK (less sensitive)`);
-          } else if (isIPv6) {
-            lines.push(`[!]    ${ip} — IPv6 (may reveal location)`);
+            lines.push(`[*]    ${ip} — LOCAL NETWORK CANDIDATE`);
           } else {
-            lines.push(`[!] ⚠️  ${ip} — PUBLIC IP EXPOSED!`);
+            lines.push(`[!] ⚠️  ${ip} — NON-LOCAL CANDIDATE REVEALED`);
           }
         }
+        if (mdnsCandidates > 0) {
+          lines.push(`[*]    mDNS host candidates: ${mdnsCandidates}`);
+        }
         lines.push('');
-        lines.push('[!] RECOMMENDATION: Disable WebRTC IP detection');
-        lines.push('    Firefox: media.peerconnection.enabled = false');
-        lines.push('    Chrome: Install "WebRTC Leak Prevent" extension');
+        lines.push('[*] NOTE:');
+        lines.push('    This local-only audit does not contact public STUN reflectors.');
+        lines.push('    It shows what the browser is willing to expose locally, not your public IP.');
+        lines.push('[*] RECOMMENDATION:');
+        lines.push('    - Keep mDNS masking enabled where available');
+        lines.push('    - Disable WebRTC only if your threat model requires it');
       }
       lines.push('');
       lines.push('[*] Scan complete.');
@@ -218,8 +222,7 @@ export async function detectWebRTCLeak(): Promise<string[]> {
     }
 
     try {
-      const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-      const pc = new RTCPeerConnection(config);
+      const pc = new RTCPeerConnection({ iceServers: [] });
 
       pc.onicecandidate = (e) => {
         if (!e.candidate) {
@@ -229,9 +232,14 @@ export async function detectWebRTCLeak(): Promise<string[]> {
         }
         const parts = e.candidate.candidate.split(' ');
         const ip = parts[4];
-        if (ip && !ip.includes('.local') && ip !== '0.0.0.0') {
+        if (ip?.includes('.local')) {
+          mdnsCandidates += 1;
+          lines.push('[+] Found mDNS-masked local candidate');
+          return;
+        }
+        if (ip && ip !== '0.0.0.0') {
           foundIPs.add(ip);
-          lines.push(`[+] Found IP: ${ip} (${parts[7] || 'unknown'} ${parts[2]?.toLowerCase() || ''})`);
+          lines.push(`[+] Found candidate: ${ip} (${parts[7] || 'unknown'} ${parts[2]?.toLowerCase() || ''})`);
         }
       };
 
@@ -505,63 +513,37 @@ export async function auditSovereignty(): Promise<string[]> {
 /** 7. DNS / Public IP Exposure Test — checks what IP the outside world sees */
 export async function testDNSExposure(): Promise<string[]> {
   const lines: string[] = [
-    '[*] DRAGON DNS/IP EXPOSURE TEST v1.0 — REAL TEST',
-    '[*] Checking what the outside world sees...',
+    '[*] DRAGON NETWORK EXPOSURE POSTURE v1.0 — LOCAL-ONLY TEST',
+    '[*] Inspecting browser and connection state without external reflectors...',
     '',
   ];
 
-  const endpoints = [
-    { name: 'ipify (IPv4)', url: 'https://api.ipify.org?format=json', field: 'ip' },
-    { name: 'ipify (IPv6)', url: 'https://api64.ipify.org?format=json', field: 'ip' },
-  ];
+  const conn = (navigator as Navigator & {
+    connection?: { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean };
+  }).connection;
 
-  const foundIPs = new Set<string>();
-
-  for (const ep of endpoints) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch(ep.url, { signal: controller.signal });
-      clearTimeout(timeout);
-      if (res.ok) {
-        const data = await res.json();
-        const ip = data[ep.field];
-        if (ip) {
-          foundIPs.add(ip);
-          lines.push(`[+] ${ep.name}: ${ip}`);
-        }
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('abort')) {
-        lines.push(`[*] ${ep.name}: Timeout (blocked or no internet)`);
-      } else {
-        lines.push(`[*] ${ep.name}: ${msg}`);
-      }
-    }
-  }
-
+  lines.push(`[+] navigator.onLine: ${navigator.onLine}`);
+  lines.push(`[+] location.origin: ${window.location.origin}`);
+  lines.push(`[+] connection.effectiveType: ${conn?.effectiveType || 'unknown'}`);
+  lines.push(`[+] connection.downlink: ${conn?.downlink || 0} Mbps`);
+  lines.push(`[+] connection.rtt: ${conn?.rtt || 0} ms`);
+  lines.push(`[+] connection.saveData: ${conn?.saveData ? 'true' : 'false'}`);
   lines.push('');
-
-  if (foundIPs.size === 0) {
-    lines.push('[+] ✅ No public IP detected — you may be offline or fully blocked');
-    lines.push('[+] 🇸🇦 SOVEREIGN MODE: Network isolated');
+  lines.push('[*] PUBLIC IP LOOKUP: intentionally skipped');
+  lines.push('    Determining your public IP requires contacting an external reflector.');
+  lines.push('    That would violate the local-only posture of this tool.');
+  lines.push('');
+  if (!navigator.onLine) {
+    lines.push('[+] ✅ Browser reports OFFLINE — external exposure is currently minimal.');
   } else {
-    lines.push(`[!] ⚠️  ${foundIPs.size} public IP(s) detected:`);
-    for (const ip of foundIPs) {
-      const isIPv6 = ip.includes(':');
-      lines.push(`    ${isIPv6 ? '🟡' : '🔴'} ${ip} ${isIPv6 ? '(IPv6)' : '(IPv4)'}`);
-    }
-    lines.push('');
-    lines.push('[*] WHAT THIS MEANS:');
-    lines.push('    Any website you visit can see this IP address.');
-    lines.push('    Your ISP, government, and network admin can see your traffic.');
-    lines.push('');
-    lines.push('[*] RECOMMENDATIONS:');
-    lines.push('    - Use a trusted VPN (Mullvad, ProtonVPN) to mask your IP');
-    lines.push('    - Use Tor Browser for anonymous browsing');
-    lines.push('    - DNS-over-HTTPS to prevent DNS snooping');
+    lines.push('[*] Browser reports ONLINE.');
+    lines.push('[*] Any visited remote site can still observe your public IP at the network edge.');
   }
+  lines.push('');
+  lines.push('[*] RECOMMENDATIONS:');
+  lines.push('    - Keep sensitive work inside local or air-gapped environments');
+  lines.push('    - Use a trusted VPN only if your threat model requires IP masking');
+  lines.push('    - Prefer local services such as Ollama on 127.0.0.1');
 
   lines.push('');
   lines.push('[*] Test complete.');

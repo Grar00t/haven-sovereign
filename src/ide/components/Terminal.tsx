@@ -9,9 +9,9 @@ import {
 // ── Available command names for tab completion ──────────────────
 const ALL_COMMANDS = [
   'help', 'clear', 'cls', 'exit', 'echo', 'ls', 'cd', 'pwd', 'whoami', 'date',
-  'neofetch', 'matrix', 'sovereign', 'theme', 'cat', 'ascii', 'touch', 'mkdir',
-  'rm', 'git', 'npm', 'node', 'ping', 'curl', 'uptime', 'haven', 'ai',
-  'phalanx', 'bluvalt', 'niyah', 'scan', 'dragon403', 'expose', 'zen', 'open', 'save',
+  'neofetch', 'theme', 'cat', 'ascii', 'touch', 'mkdir', 'rm',
+  'git', 'npm', 'node', 'python', 'py', 'ollama', 'gemini',
+  'tools', 'profile', 'haven', 'phalanx', 'niyah', 'scan', 'msf', 'zen', 'open', 'save',
 ];
 
 export function Terminal() {
@@ -141,9 +141,11 @@ export function Terminal() {
                 color: term.id === activeTerminalId ? currentTheme.accent : currentTheme.textMuted,
               }}
               onClick={() => setActiveTerminal(term.id)}
+              title={`Profile: ${term.profile}`}
             >
               <Zap size={11} />
               <span className="text-xs">{term.name}</span>
+              <span className="text-[9px] uppercase opacity-70">{term.profile}</span>
               {terminals.length > 1 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); closeTerminal(term.id); }}

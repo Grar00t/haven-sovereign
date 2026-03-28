@@ -2,7 +2,11 @@
   "name": "HAVEN | THE SOVEREIGN ALGORITHM",
   "version": "5.0.0",
   "description": "Saudi Arabia's first sovereign AI development environment. Zero telemetry. Local-first AI. Full PDPL compliance.",
-  "author": "KHAWRIZM (Sulaiman Alshammari)",
+  "author": "Sulaiman Alshammari <iqd@hotmail.com>",
+  "contact": {
+    "primaryEmail": "iqd@hotmail.com",
+    "backupEmail": "shammar403@gmail.com"
+  },
   "license": "Proprietary",
   "homepage": "https://khawrizm.com",
   "repository": "https://github.com/graxos/OFFICIAL",

@@ -2,9 +2,12 @@ import type { FileNode } from '../types';
 import type { IDESetting } from '../types';
 
 // ── Default project tree ──────────────────────────────────────────
+export const DEFAULT_WORKSPACE_NAME = 'virtual-workspace';
+export const DEFAULT_CWD = `/${DEFAULT_WORKSPACE_NAME}`;
+
 export const DEFAULT_FILES: FileNode[] = [
   {
-    id: 'root', name: 'haven-project', type: 'folder',
+    id: 'root', name: DEFAULT_WORKSPACE_NAME, type: 'folder',
     children: [
       {
         id: 'src', name: 'src', type: 'folder',
@@ -36,7 +39,7 @@ export const DEFAULT_FILES: FileNode[] = [
       { id: 'package-json', name: 'package.json', type: 'file', language: 'json', gitStatus: null, content: `{\n  "name": "haven-sovereign",\n  "version": "2.0.0",\n  "scripts": { "dev": "vite", "build": "tsc && vite build" }\n}` },
       { id: 'vite-config', name: 'vite.config.ts', type: 'file', language: 'typescript', gitStatus: null, content: `import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\n\nexport default defineConfig({ plugins: [react()] });` },
       { id: 'tsconfig', name: 'tsconfig.json', type: 'file', language: 'json', gitStatus: null, content: `{\n  "compilerOptions": { "target": "ES2020", "jsx": "react-jsx", "strict": true }\n}` },
-      { id: 'readme', name: 'README.md', type: 'file', language: 'markdown', gitStatus: null, content: `# HAVEN — The Sovereign Algorithm\n\n> "We don't optimize. We liberate."\n\nBuilt by **أبو خوارزم** (Sulaiman Alshammari) 🇸🇦` },
+      { id: 'readme', name: 'README.md', type: 'file', language: 'markdown', gitStatus: null, content: `# HAVEN Virtual Workspace\n\nThis is a safe local sandbox inside HAVEN IDE.\n\n- Use **Open Folder** to load a real project from disk.\n- Drag and drop files or folders to import them.\n- Nothing here should pretend to be your real repository until you choose one.\n\nBuilt for human-first, local-first development.` },
       { id: 'env', name: '.env', type: 'file', language: 'plaintext', gitStatus: null, content: `VITE_APP_NAME=HAVEN\nVITE_SOVEREIGN_MODE=true` },
       { id: 'gitignore', name: '.gitignore', type: 'file', language: 'plaintext', gitStatus: null, content: `node_modules/\ndist/\n.env\n*.log` },
     ],

@@ -10,6 +10,7 @@ import {
   createFSSlice,
   createGitSlice,
   createNiyahSlice,
+  createSovereignSlice,
   type IDEState,
 } from './store';
 
@@ -25,4 +26,5 @@ export const useIDEStore = create<IDEState>()((...a) => ({
   ...createFSSlice(...a),
   ...createGitSlice(...a),
   ...createNiyahSlice(...a),
+  ...createSovereignSlice(...a),
 }));

@@ -292,6 +292,19 @@ export function FileExplorer() {
           Connected to real file system
         </div>
       )}
+      {!isRealFS && (
+        <div
+          className="mx-3 mb-2 px-2.5 py-2 rounded text-[11px] leading-relaxed border"
+          style={{ backgroundColor: currentTheme.accent + '10', color: currentTheme.textMuted, borderColor: currentTheme.accent + '30' }}
+        >
+          <div className="font-semibold mb-1" style={{ color: currentTheme.accent }}>
+            Virtual workspace loaded
+          </div>
+          <div>
+            Open a real folder from disk to replace the demo tree and work on your actual project.
+          </div>
+        </div>
+      )}
 
       {filteredFiles.map((node) => (
         <FileTreeNode key={node.id} node={node} depth={0} path="" />

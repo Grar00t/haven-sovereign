@@ -32,11 +32,11 @@ export const TOOLS: HackTool[] = [
     command: 'dragon_forensic --localStorage --sessionStorage --indexedDB', duration: 0,
   },
   {
-    id: 'webrtc_leak', name: 'WebRTC IP Leak Test', nameAr: 'كشف تسريب الآي بي',
+    id: 'webrtc_leak', name: 'WebRTC Candidate Audit', nameAr: 'تدقيق مرشحات WebRTC',
     icon: Wifi, color: '#FF6B00', category: 'real',
-    description: 'Detects if your real IP leaks via WebRTC',
+    description: 'Audits local ICE candidates without contacting third-party STUN services',
     isReal: true, runner: detectWebRTCLeak,
-    command: 'dragon_leak --webrtc --stun-test', duration: 0,
+    command: 'dragon_leak --webrtc --local-candidates-only', duration: 0,
   },
   {
     id: 'cookie_inspect', name: 'Cookie Inspector', nameAr: 'فاحص الكوكيز',
@@ -60,11 +60,11 @@ export const TOOLS: HackTool[] = [
     command: 'haven_audit --pdpl --nca-ecc --sovereignty --full', duration: 0,
   },
   {
-    id: 'dns_exposure', name: 'DNS / IP Exposure', nameAr: 'كشف عنوان IP',
+    id: 'dns_exposure', name: 'Network Exposure Posture', nameAr: 'وضعية التعرض الشبكي',
     icon: Network, color: '#FF00FF', category: 'real',
-    description: 'Checks what public IP the outside world sees',
+    description: 'Explains local network exposure without contacting external reflectors',
     isReal: true, runner: testDNSExposure,
-    command: 'dragon_dns --public-ip --exposure-test', duration: 0,
+    command: 'dragon_dns --local-posture --no-external-reflectors', duration: 0,
   },
   {
     id: 'hosts_gen', name: 'Hosts File Generator', nameAr: 'مولد ملف الحظر',

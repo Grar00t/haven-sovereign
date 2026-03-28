@@ -21,6 +21,8 @@ import { OutlinePanel } from './components/OutlinePanel';
 import { NiyahPanel } from './components/NiyahPanel';
 import { ToolsPanel } from './components/ToolsPanel';
 import { SovereignDashboard } from './components/SovereignDashboard';
+import { sovereignTauri } from './engine/SovereignTauri';
+import { DEFAULT_WORKSPACE_NAME } from './store/constants';
 import Editor from '@monaco-editor/react';
 
 export function HavenIDE() {
@@ -36,6 +38,7 @@ export function HavenIDE() {
 
   // Auto-save
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const bootNotifiedRef = useRef(false);
   useEffect(() => {
     const autoSaveSetting = useIDEStore.getState().getSetting('files.autoSave');
     if (autoSaveRef.current) clearInterval(autoSaveRef.current);
@@ -107,8 +110,90 @@ export function HavenIDE() {
   // Restore previous session from IndexedDB
   useEffect(() => {
     restoreFromIDB();
-    addNotification({ type: 'success', message: 'HAVEN IDE v5.0 loaded — Sovereign Edition' });
-  }, []);
+    if (!bootNotifiedRef.current) {
+      bootNotifiedRef.current = true;
+      addNotification({ type: 'success', message: 'HAVEN IDE v5.0 loaded — Sovereign Edition' });
+    }
+  }, [addNotification, restoreFromIDB]);
+
+  const installPendingUpdate = useCallback(async () => {
+    addNotification({
+      type: 'info',
+      message: 'Installing desktop update...',
+      detail: 'Windows may briefly close HAVEN to complete the installer.',
+    });
+
+    try {
+      const result = await sovereignTauri.installAppUpdate();
+      addNotification({
+        type: result.installed ? 'success' : 'warning',
+        message: result.installed ? 'Desktop update installed' : 'Desktop update was not installed',
+        detail: result.detail,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      addNotification({
+        type: 'error',
+        message: 'Desktop update installation failed',
+        detail,
+      });
+    }
+  }, [addNotification]);
+
+  const checkForDesktopUpdates = useCallback(async (announceWhenCurrent = false) => {
+    const status = await sovereignTauri.getUpdaterStatus();
+
+    if (!status.configured) {
+      if (announceWhenCurrent) {
+        addNotification({
+          type: 'warning',
+          message: 'Desktop updates are not configured yet',
+          detail: 'Set HAVEN_UPDATER_ENDPOINTS and HAVEN_UPDATER_PUBKEY before publishing releases.',
+        });
+      }
+      return;
+    }
+
+    const update = await sovereignTauri.checkForAppUpdate();
+
+    if (!update.configured) {
+      if (announceWhenCurrent) {
+        addNotification({
+          type: 'warning',
+          message: 'Desktop updater is disabled',
+          detail: update.notes || 'No updater endpoint is configured for this build.',
+        });
+      }
+      return;
+    }
+
+    if (update.available && update.version) {
+      addNotification({
+        type: 'info',
+        message: `Desktop update available: v${update.version}`,
+        detail: update.notes || `Current version: v${update.currentVersion}`,
+        actions: [
+          {
+            label: 'Install now',
+            action: () => { void installPendingUpdate(); },
+          },
+        ],
+      });
+      return;
+    }
+
+    if (announceWhenCurrent) {
+      addNotification({
+        type: 'success',
+        message: `HAVEN is up to date (v${update.currentVersion})`,
+        detail: `Update channel: ${status.channel}`,
+      });
+    }
+  }, [addNotification, installPendingUpdate]);
+
+  useEffect(() => {
+    void checkForDesktopUpdates(false);
+  }, [checkForDesktopUpdates]);
 
   // Drag & drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -158,7 +243,7 @@ export function HavenIDE() {
         </div>
       )}
       {/* Title Bar */}
-      {!zenMode && <TitleBar />}
+      {!zenMode && <TitleBar onCheckForUpdates={() => { void checkForDesktopUpdates(true); }} />}
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
@@ -257,7 +342,7 @@ export function HavenIDE() {
   );
 }
 
-function TitleBar() {
+function TitleBar({ onCheckForUpdates }: { onCheckForUpdates: () => void }) {
   const { currentTheme, breadcrumbs, openRealFolder, saveAllFiles, isRealFS } = useIDEStore();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
@@ -303,6 +388,7 @@ function TitleBar() {
     ],
     Help: [
       { label: 'About HAVEN IDE', action: () => useIDEStore.getState().addNotification({ type: 'info', message: 'HAVEN IDE v5.0 — Sovereign Edition\nBuilt by أبو خوارزم (Sulaiman Alshammari)\nPowered by Monaco Editor + React 19 + Zustand' }) },
+      { label: 'Check for Updates', action: onCheckForUpdates },
       { label: 'Documentation' },
       { label: 'Report Issue' },
       { label: '', divider: true },
@@ -366,7 +452,7 @@ function TitleBar() {
 
       <div className="text-xs flex items-center gap-1" style={{ color: currentTheme.textMuted }}>
         {isRealFS && <span className="mr-1" style={{ color: currentTheme.accent }}>● LIVE</span>}
-        {breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1] : 'haven-project'}
+        {breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1] : DEFAULT_WORKSPACE_NAME}
         <span className="mx-1 opacity-40">—</span>
         <span style={{ color: currentTheme.accent, opacity: 0.6 }}>HAVEN IDE v5.0</span>
       </div>

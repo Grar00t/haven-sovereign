@@ -56,6 +56,7 @@ interface EngineStats {
   ollamaStatus: ConnectionStatus;
   activeModel: string | null;
   endpointLabel: string;
+  performanceMode: 'auto' | 'cpu-smart' | 'gpu';
   totalVramGB: number;
   loadedModels: number;
   fimCacheHits: number;
@@ -68,6 +69,7 @@ function useEngineStats(intervalMs = 3000): EngineStats {
     ollamaStatus: 'disconnected',
     activeModel: null,
     endpointLabel: ollamaService.endpointLabel,
+    performanceMode: modelRouter.getPerformanceMode(),
     totalVramGB: 0,
     loadedModels: 0,
     fimCacheHits: 0,
@@ -95,6 +97,7 @@ function useEngineStats(intervalMs = 3000): EngineStats {
       ollamaStatus: ollamaService.getStatus(),
       activeModel,
       endpointLabel: ollamaService.endpointLabel,
+      performanceMode: modelRouter.getPerformanceMode(),
       totalVramGB,
       loadedModels,
       fimCacheHits: getFIMCacheSize(),
@@ -237,6 +240,17 @@ export function StatusBar() {
           >
             <Activity className="w-3 h-3 shrink-0" />
             <span className="truncate">{engine.activeModel.split(':')[0]}</span>
+          </span>
+        )}
+
+        {engine.ollamaStatus === 'connected' && engine.performanceMode === 'cpu-smart' && (
+          <span
+            className="flex items-center gap-1 text-[10px]"
+            title="CPU-smart mode is active because Ollama is not using VRAM on this machine."
+            style={{ color: '#f59e0b', fontWeight: 600 }}
+          >
+            <Cpu className="w-3 h-3" />
+            <span>CPU-SMART</span>
           </span>
         )}
       </div>

@@ -5,31 +5,31 @@ import { ScrollReveal } from '../shared/ScrollReveal';
 
 // ── Fake code lines that type out ─────────────────────────────
 const CODE_LINES = [
-  { text: 'import { NiyahEngine } from "@haven/core";', color: 'text-purple-400' },
-  { text: 'import { PhalanxProtocol } from "@haven/security";', color: 'text-purple-400' },
+  { text: 'import { NiyahForensics } from "@haven/investigator";', color: 'text-red-400' },
+  { text: 'import { PhalanxShield } from "@haven/defense";', color: 'text-purple-400' },
   { text: '', color: '' },
-  { text: '// Initialize sovereign AI — zero telemetry', color: 'text-white/30' },
-  { text: 'const niyah = new NiyahEngine({', color: 'text-neon-green' },
-  { text: '  mode: "sovereign",', color: 'text-yellow-400' },
-  { text: '  telemetry: false,', color: 'text-red-400' },
-  { text: '  locale: "ar-SA",', color: 'text-blue-400' },
-  { text: '  threeLobe: true,', color: 'text-neon-green' },
+  { text: '// Start Dark Investigation — Sincere Intent Activated', color: 'text-white/30' },
+  { text: 'const investigator = new NiyahForensics({', color: 'text-red-500' },
+  { text: '  target: "enterprise-leak-01",', color: 'text-yellow-400' },
+  { text: '  hybrid_terminal: true,', color: 'text-blue-400' },
+  { text: '  bypass_cloud_armor: true,', color: 'text-neon-green' },
+  { text: '  intent: "RECOVER_SOVEREIGNTY"', color: 'text-red-400' },
   { text: '});', color: 'text-neon-green' },
   { text: '', color: '' },
-  { text: 'await niyah.understand(userIntent);', color: 'text-white/70' },
-  { text: '// → Intent parsed. Context retained. No data leaked.', color: 'text-neon-green/50' },
+  { text: 'await investigator.dissect(activeTraffic);', color: 'text-white/70' },
+  { text: '// → MSF Session Linked. Forensic Lobe Engaged.', color: 'text-red-500/80' },
 ];
 
 const TERMINAL_LINES = [
-  { text: '$ haven init --sovereign', color: 'text-neon-green' },
-  { text: '✓ Phalanx Protocol v1.8 — ARMED', color: 'text-neon-green/70' },
-  { text: '✓ Niyah Engine — READY', color: 'text-neon-green/70' },
-  { text: '✓ Telemetry — BLOCKED (0 bytes out)', color: 'text-red-400' },
-  { text: '✓ Local AI Models — 15 loaded', color: 'text-neon-green/70' },
-  { text: '✓ K-Forge — Connected (P2P)', color: 'text-blue-400' },
+  { text: '$ haven investigation --mode hybrid', color: 'text-neon-green' },
+  { text: '[*] Initializing Dark Room environment...', color: 'text-white/40' },
+  { text: 'msf6 > use exploit/multi/handler', color: 'text-red-500' },
+  { text: 'msf6 (handler) > set PAYLOAD windows/x64/meterpreter/reverse_tcp', color: 'text-white/60' },
+  { text: '✓ Phalanx Protocol: Intercepting exfiltration...', color: 'text-neon-green/70' },
+  { text: '✓ NIYAH: Detecting adversarial intent...', color: 'text-purple-400' },
   { text: '', color: '' },
-  { text: '> Dragon403: System Revenant Status OK', color: 'text-yellow-400' },
-  { text: '> HAVEN IDE v5.0 — Sovereign. Ready.', color: 'text-white' },
+  { text: '> INVESTIGATOR: SULAIMAN_ALSHAMMARI', color: 'text-yellow-400' },
+  { text: '> DARK ROOM STATUS: ARMED & READY.', color: 'text-red-600 font-bold' },
 ];
 
 // ── Typing animation for code ─────────────────────────────────
@@ -113,9 +113,8 @@ const FileTree = () => {
       {files.map((f, i) => (
         <div
           key={i}
-          className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-mono cursor-default transition-colors ${
-            f.active ? 'bg-neon-green/10 text-neon-green' : 'text-white/40 hover:text-white/60'
-          }`}
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-mono cursor-default transition-colors ${f.active ? 'bg-neon-green/10 text-neon-green' : 'text-white/40 hover:text-white/60'
+            }`}
           style={{ paddingLeft: `${f.indent * 12 + 8}px` }}
         >
           <span className="text-[8px]">{f.icon}</span>
@@ -231,22 +230,20 @@ export const IDEPortal = () => {
                   <div className="flex items-center border-b border-white/5 bg-white/[0.02]">
                     <button
                       onClick={(e) => { e.stopPropagation(); setActiveTab('code'); }}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-mono border-b-2 transition-colors ${
-                        activeTab === 'code'
+                      className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-mono border-b-2 transition-colors ${activeTab === 'code'
                           ? 'border-neon-green text-neon-green bg-white/[0.03]'
                           : 'border-transparent text-white/30 hover:text-white/50'
-                      }`}
+                        }`}
                     >
                       <Code2 className="w-3 h-3" />
                       NiyahEngine.ts
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setActiveTab('terminal'); }}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-mono border-b-2 transition-colors ${
-                        activeTab === 'terminal'
+                      className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-mono border-b-2 transition-colors ${activeTab === 'terminal'
                           ? 'border-neon-green text-neon-green bg-white/[0.03]'
                           : 'border-transparent text-white/30 hover:text-white/50'
-                      }`}
+                        }`}
                     >
                       <Terminal className="w-3 h-3" />
                       sovereign-sh

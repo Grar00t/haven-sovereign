@@ -1,0 +1,66 @@
+.panel {
+  position: relative;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.96), rgba(5, 5, 5, 0.82));
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+}
+
+.searchWrap {
+  position: sticky;
+  top: 33px;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.92), rgba(5, 5, 5, 0.74));
+}
+
+.searchInput {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.searchInput::placeholder {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+.searchInput:focus {
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.28);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.categories {
+  position: sticky;
+  top: 76px;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.9), rgba(5, 5, 5, 0.68));
+}
+
+.categoryBtn {
+  border: 1px solid transparent;
+}
+
+.categoryBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.list {
+  padding-bottom: 16px;
+}
+
+.extensionCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.01));
+  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.extensionCard:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+}

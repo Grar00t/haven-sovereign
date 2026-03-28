@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ModelRouter, LOBE_CONFIGS, ALL_LOBE_IDS } from './ModelRouter';
-import type { LobeId } from './ModelRouter';
+import { LOBE_CONFIGS, ALL_LOBE_IDS } from './ModelRouter';
 
 describe('ModelRouter', () => {
   describe('LOBE_CONFIGS', () => {

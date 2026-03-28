@@ -20,6 +20,12 @@ const LOBE_COLORS: Record<LobeId, string> = {
   sensory: '#34d399',    // green
 };
 
+const LOBE_SHORT_LABELS: Record<LobeId, string> = {
+  cognitive: 'معرفي',
+  executive: 'تنفيذي',
+  sensory: 'حسي',
+};
+
 // ── Routing Trace Panel ──────────────────────────────────────
 
 function RoutingTracePanel({ theme }: { theme: { accent: string; border: string; text: string; textMuted: string; bg: string; sidebar: string } }) {
@@ -123,8 +129,8 @@ function RoutingTracePanel({ theme }: { theme: { accent: string; border: string;
                 return (
                   <div key={i} className="flex items-center gap-1.5 text-[9px]" style={{ color: theme.textMuted }}>
                     <CircleDot size={6} style={{ color: LOBE_COLORS[t.decision.primary] }} />
-                    <span style={{ color: LOBE_COLORS[t.decision.primary] }}>
-                      {LOBE_CONFIGS[t.decision.primary].nameAr.slice(0, 6)}
+                      <span style={{ color: LOBE_COLORS[t.decision.primary] }}>
+                        {LOBE_SHORT_LABELS[t.decision.primary]}
                     </span>
                     <span className="truncate flex-1" title={t.input}>
                       {t.input.slice(0, 40)}
@@ -184,8 +190,8 @@ function LobeStatsBar({ theme, activeLobe }: {
             title={`${config.nameAr} (${config.name})\nModel: ${info?.current || 'none'}\nVRAM: ${vram.toFixed(1)} GB\n${loaded ? '⚡ Loaded' : '💤 Idle'}${hasOverride ? '\n🔒 User Override' : ''}`}
           >
             <CircleDot size={8} style={{ color: isActive ? LOBE_COLORS[id] : loaded ? LOBE_COLORS[id] : theme.textMuted }} />
-            <span className={isActive ? 'font-semibold' : ''}>
-              {config.nameAr.slice(0, 6)}
+              <span className={isActive ? 'font-semibold' : ''}>
+                {LOBE_SHORT_LABELS[id]}
             </span>
             {loaded && (
               <span className="text-[8px] font-mono opacity-60">{vram > 0 ? `${vram.toFixed(1)}G` : '⚡'}</span>
@@ -217,7 +223,6 @@ export function AIPanel() {
   const abortRef = useRef(false);
 
   const activeTab = useMemo(() => openTabs.find(t => t.id === activeTabId), [openTabs, activeTabId]);
-
   // ── Connect to Ollama on mount ─────────────────────────────
   useEffect(() => {
     const unsub = threeLobeAgent.onStatusChange(setConnectionStatus);
@@ -234,21 +239,9 @@ export function AIPanel() {
 
   if (!aiPanelVisible) return null;
 
-  const handleCopy = (text: string, idx: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIdx(idx);
-    setTimeout(() => setCopiedIdx(null), 2000);
-  };
+  const submitPrompt = useCallback(async (query: string) => {
+    if (!query.trim() || isStreaming) return;
 
-  const handleStop = () => {
-    abortRef.current = true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isStreaming) return;
-
-    const query = input;
     setInput('');
     addAiMessage({ role: 'user', content: query });
 
@@ -256,11 +249,12 @@ export function AIPanel() {
     setStreamContent('');
     abortRef.current = false;
 
-    // Build context from active editor tab
     const context = {
       activeFile: activeTab?.name,
       language: activeTab?.language || undefined,
-      selectedCode: activeTab?.content?.slice(0, 2000) || undefined,
+      selectedCode: activeTab?.content?.slice(0, 800) || undefined,
+      openFiles: openTabs.map(t => t.name),
+      recentFiles: openTabs.slice(-5).map(t => t.name),
     };
 
     let accumulated = '';
@@ -273,14 +267,13 @@ export function AIPanel() {
           setStreamContent(accumulated);
           setActiveLobe(lobe);
         },
-        onLobeStart: (lobe, model) => {
+        onLobeStart: (lobe) => {
           setActiveLobe(lobe);
         },
-        onLobeEnd: (lobe) => {
+        onLobeEnd: () => {
           setActiveLobe(null);
         },
-        onRouting: (decision) => {
-          // Auto-expand trace on new routing event
+        onRouting: () => {
           if (!showTrace) setShowTrace(true);
         },
         onComplete: (msg) => {
@@ -303,7 +296,6 @@ export function AIPanel() {
         },
       });
     } catch (err) {
-      // If chat itself throws, fall back gracefully
       if (!accumulated) {
         addAiMessage({
           role: 'assistant',
@@ -314,14 +306,64 @@ export function AIPanel() {
       setIsStreaming(false);
       setActiveLobe(null);
     }
+  }, [activeTab, addAiMessage, isStreaming, openTabs, showTrace]);
+
+  const handleCopy = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  const handleStop = () => {
+    abortRef.current = true;
+    ollamaService.cancelAll();
+    setStreamContent('');
+    setIsStreaming(false);
+    setActiveLobe(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitPrompt(input);
   };
 
   const quickActions = [
-    { icon: Brain, label: '/niyah', tooltip: 'Niyah Analysis' },
-    { icon: Shield, label: '/expose', tooltip: 'Exposé' },
-    { icon: Code2, label: '/explain', tooltip: 'Explain Code' },
-    { icon: Wrench, label: '/fix', tooltip: 'Fix Bugs' },
-    { icon: Zap, label: '/optimize', tooltip: 'Optimize' },
+    {
+      icon: Brain,
+      label: 'niyah',
+      tooltip: 'Run NIYAH intent analysis on the current context',
+      prompt: () => `Run NIYAH intent analysis for ${activeTab?.name || 'the current request'} and explain the best routing decision in 4 short bullets max.`,
+    },
+    {
+      icon: Zap,
+      label: 'all',
+      tooltip: 'Use the full three-lobe pipeline',
+      prompt: () => `Use all three lobes together and give me the strongest answer for ${activeTab?.name || 'this request'} in a concise practical format.`,
+    },
+    {
+      icon: Shield,
+      label: 'expose',
+      tooltip: 'Surface privacy, telemetry, or security risks',
+      prompt: () => `Expose the privacy, telemetry, or security risks in ${activeTab?.name || 'the current context'} and rank them by severity with concrete fixes.`,
+    },
+    {
+      icon: Code2,
+      label: 'explain',
+      tooltip: 'Explain the active file clearly',
+      prompt: () => `Explain ${activeTab?.name || 'the active code'} clearly for a human developer. Focus on purpose, flow, and risky edges.`,
+    },
+    {
+      icon: Wrench,
+      label: 'fix',
+      tooltip: 'Find likely bugs and concrete fixes',
+      prompt: () => `Find likely bugs in ${activeTab?.name || 'the current file'} and propose concrete fixes with minimal risk.`,
+    },
+    {
+      icon: Zap,
+      label: 'optimize',
+      tooltip: 'Suggest practical performance and clarity improvements',
+      prompt: () => `Optimize ${activeTab?.name || 'the current file'} for clarity, safety, and performance without changing behavior unnecessarily.`,
+    },
   ];
 
   // ── Connection status indicator ────────────────────────────
@@ -397,17 +439,17 @@ export function AIPanel() {
       {showTrace && <RoutingTracePanel theme={currentTheme} />}
 
       {/* Quick actions */}
-      <div className="flex gap-1 px-3 py-1.5 border-b" style={{ borderColor: currentTheme.border + '60' }}>
-        {quickActions.map(({ icon: Icon, label, tooltip }) => (
+      <div className="grid grid-cols-3 gap-1 px-3 py-1.5 border-b" style={{ borderColor: currentTheme.border + '60' }}>
+        {quickActions.map(({ icon: Icon, label, tooltip, prompt }) => (
           <button
             key={label}
-            className="flex-1 text-[10px] py-1 rounded flex items-center justify-center gap-1 transition-colors hover:brightness-125"
+            className="text-[10px] py-1 rounded flex items-center justify-center gap-1 transition-colors hover:brightness-125"
             style={{ backgroundColor: currentTheme.border, color: currentTheme.textMuted }}
             title={tooltip}
-            onClick={() => { setInput(label + ' '); }}
+            onClick={() => { void submitPrompt(prompt()); }}
           >
             <Icon size={10} />
-            {label.slice(1)}
+            {label}
           </button>
         ))}
       </div>

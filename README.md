@@ -12,6 +12,28 @@ Built by Sulaiman Alshammari (@Dragon403) in Riyadh, Saudi Arabia. Powered by **
 
 ---
 
+## Human-First Charter
+
+HAVEN is built to serve humans before markets.
+
+- It must serve any person, not only Arabs, not only locals, and not only people with money.
+- Privacy, dignity, and access are defaults, not premium features.
+- Arabic matters deeply here, but the product must remain multilingual and globally useful.
+- We aim for honest, local, inspectable intelligence rather than theatrical claims.
+
+Read the full charter here:
+
+- [PRINCIPLES.md](./PRINCIPLES.md)
+- [docs/UNIFIED_ARCHITECTURE.md](./docs/UNIFIED_ARCHITECTURE.md)
+
+Project identity:
+
+- Maintainer: Sulaiman Alshammari
+- Primary email: `iqd@hotmail.com`
+- Backup email: `shammar403@gmail.com`
+
+---
+
 ## 🏗️ Three-Lobe Architecture
 
 ```
@@ -207,7 +229,7 @@ Aggregated Response
 
 ### ما هو HAVEN-Sovereign؟
 
-**هيفن-سوفرين** هي بيئة تطوير متكاملة تجمع بين:
+**هيفن               -سوفرين** هي بيئة تطوير متكاملة تجمع بين:
 
 - **محرر أكواد ذكي** مع إكمال تلقائي
 - **محرك نية عربي** يفهم النصوص بلهجة الخليج

@@ -1,0 +1,7 @@
+{
+    "chat.statusWidget.anonymous": true,
+    "terminal.integrated.developer.devMode": true,
+    "terminal.integrated.enableWin32InputMode": true,
+    "search.searchEditor.reusePriorSearchConfiguration": true,
+    "robotcode.disableExtension": true
+}

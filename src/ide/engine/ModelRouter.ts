@@ -70,6 +70,7 @@ export interface RouterStatus {
   connected: boolean;
   connectionStatus: ConnectionStatus;
   fallbackMode: boolean;
+  performanceMode: 'auto' | 'cpu-smart' | 'gpu';
   lobeAssignments: Record<LobeId, string | null>;
   availableModels: string[];
 }
@@ -120,6 +121,7 @@ interface ModelQualityProfile {
 
 const MODEL_QUALITY_PROFILES: ModelQualityProfile[] = [
   // Code-specialist models → Cognitive lobe excels
+  { prefix: 'deepseek-r1', scores: { cognitive: 96, executive: 76, sensory: 46 }, tags: ['reasoning', 'analysis'] },
   { prefix: 'deepseek-coder', scores: { cognitive: 95, executive: 50, sensory: 40 }, tags: ['code', 'fim'] },
   { prefix: 'codestral', scores: { cognitive: 92, executive: 45, sensory: 35 }, tags: ['code', 'fim'] },
   { prefix: 'qwen2.5-coder', scores: { cognitive: 90, executive: 55, sensory: 60 }, tags: ['code', 'fim', 'multilingual'] },
@@ -128,6 +130,7 @@ const MODEL_QUALITY_PROFILES: ModelQualityProfile[] = [
   { prefix: 'codegemma', scores: { cognitive: 80, executive: 42, sensory: 32 }, tags: ['code'] },
 
   // General-purpose models → Executive lobe strong
+  { prefix: 'niyah', scores: { cognitive: 82, executive: 94, sensory: 90 }, tags: ['sovereign', 'arabic', 'intent'] },
   { prefix: 'llama3', scores: { cognitive: 70, executive: 90, sensory: 65 }, tags: ['general', 'reasoning'] },
   { prefix: 'llama2', scores: { cognitive: 55, executive: 75, sensory: 55 } },
   { prefix: 'mistral', scores: { cognitive: 72, executive: 85, sensory: 60 }, tags: ['general', 'reasoning'] },
@@ -200,6 +203,12 @@ Rules:
 - You handle: translation, summarization, content writing, cultural adaptation
 - Sign critical outputs with: — الفص الحسي (Sensory Lobe)`;
 
+const FAST_SYSTEM_PROMPTS: Record<LobeId, string> = {
+  cognitive: 'You are HAVEN Cognitive. Solve code/debug/review tasks. Be concise. If the user writes Arabic, answer in Arabic and keep code in English. No fluff.',
+  executive: 'You are HAVEN Executive. Give short practical plans, tradeoffs, and priorities. Answer in Arabic when the user writes Arabic.',
+  sensory: 'You are HAVEN Sensory. Handle Arabic/English intent, explanation, and wording naturally. Be brief and useful.',
+};
+
 // ── Lobe Registry ────────────────────────────────────────────
 
 export const LOBE_CONFIGS: Record<LobeId, LobeConfig> = {
@@ -266,9 +275,9 @@ export interface RoutingTrace {
 
 /** Per-lobe timeout config (ms) */
 const LOBE_TIMEOUT_MS: Record<LobeId, number> = {
-  cognitive: 30_000,  // Code gen can be slow on big models
-  executive: 25_000,
-  sensory: 20_000,
+  cognitive: 15_000,
+  executive: 15_000,
+  sensory: 12_000,
 };
 
 class ModelRouter {
@@ -277,6 +286,7 @@ class ModelRouter {
   };
   private _fallbackMode = false;
   private _initialized = false;
+  private performanceMode: 'auto' | 'cpu-smart' | 'gpu' = 'auto';
 
   /** Per-lobe dynamic model intelligence */
   private lobeModels: Record<LobeId, LobeModelInfo> = {
@@ -308,9 +318,14 @@ class ModelRouter {
       connected: ollamaService.getStatus() === 'connected',
       connectionStatus: ollamaService.getStatus(),
       fallbackMode: this._fallbackMode,
+      performanceMode: this.performanceMode,
       lobeAssignments: { ...this.assignments },
       availableModels: ollamaService.getModels().map(m => m.name),
     };
+  }
+
+  getPerformanceMode(): 'auto' | 'cpu-smart' | 'gpu' {
+    return this.performanceMode;
   }
 
   /** Get the full LobeModelInfo for a specific lobe */
@@ -442,7 +457,22 @@ class ModelRouter {
       reasons.push('fallback-match+2');
     }
 
-    // 5) Size penalty — penalize very large models on resource-constrained setups
+    // 5) HAVEN-specific tags on custom local models
+    const lowerName = name.toLowerCase();
+    if (lowerName.startsWith('niyah:writer') && lobe === 'sensory') {
+      score += 10;
+      reasons.push('niyah-writer+10');
+    }
+    if (lowerName.startsWith('niyah:v2') && lobe === 'sensory') {
+      score += 6;
+      reasons.push('niyah-v2-sensory+6');
+    }
+    if ((lowerName.startsWith('niyah:v3') || lowerName.startsWith('niyah:latest')) && lobe === 'executive') {
+      score += 4;
+      reasons.push('niyah-exec+4');
+    }
+
+    // 6) Size penalty — penalize very large models on resource-constrained setups
     if (sizeMatch) {
       const params = parseFloat(sizeMatch[1]);
       if (params >= 70) { score -= 5; reasons.push(`size-penalty:${params}B-5`); }
@@ -469,6 +499,7 @@ class ModelRouter {
   /** Poll /api/ps for runtime stats (VRAM, context, loaded state) */
   async updateRuntimeStats(): Promise<void> {
     const running: OllamaRunningModel[] = await ollamaService.listRunning();
+    let totalVramBytes = 0;
 
     for (const lobeId of ALL_LOBE_IDS) {
       const info = this.lobeModels[lobeId];
@@ -480,6 +511,7 @@ class ModelRouter {
 
       const runEntry = running.find(r => r.name === model || r.model === model);
       if (runEntry) {
+        totalVramBytes += runEntry.size_vram ?? 0;
         info.runtime = {
           loaded: true,
           vramBytes: runEntry.size_vram ?? 0,
@@ -491,6 +523,8 @@ class ModelRouter {
         info.runtime = { loaded: false, vramBytes: 0, vramGB: 0, contextLength: 0, expiresAt: null };
       }
     }
+
+    this.performanceMode = totalVramBytes > 0 ? 'gpu' : 'cpu-smart';
   }
 
   private startRuntimePoll(): void {
@@ -934,6 +968,12 @@ class ModelRouter {
   }
 
   resolveModel(lobeId: LobeId): string {
+    const assigned = this.assignments[lobeId];
+    if (assigned && ollamaService.hasModel(assigned)) return assigned;
+
+    const preferred = this.lobeModels[lobeId].preferred;
+    if (preferred && ollamaService.hasModel(preferred)) return preferred;
+
     const config = LOBE_CONFIGS[lobeId];
     if (ollamaService.hasModel(config.model)) return config.model;
     if (ollamaService.hasModel(config.fallbackModel)) return config.fallbackModel;
@@ -942,7 +982,9 @@ class ModelRouter {
   }
 
   getSystemPrompt(lobeId: LobeId, context?: { activeFile?: string; language?: string }): string {
-    let prompt = LOBE_CONFIGS[lobeId].systemPrompt;
+    let prompt = this.performanceMode === 'gpu'
+      ? LOBE_CONFIGS[lobeId].systemPrompt
+      : FAST_SYSTEM_PROMPTS[lobeId];
     if (context?.activeFile) prompt += `\n\nActive file: ${context.activeFile}`;
     if (context?.language) prompt += `\nLanguage: ${context.language}`;
     return prompt;
@@ -952,10 +994,29 @@ class ModelRouter {
     const config = LOBE_CONFIGS[lobeId];
     const info = this.lobeModels[lobeId];
     const numCtx = info.metadata?.defaultCtx;
+    const fastPredictCap: Record<LobeId, number> = {
+      cognitive: 320,
+      executive: 224,
+      sensory: 192,
+    };
+    const fastCtxCap: Record<LobeId, number> = {
+      cognitive: 1536,
+      executive: 1024,
+      sensory: 1024,
+    };
+
+    if (this.performanceMode === 'gpu') {
+      return {
+        temperature: config.temperature,
+        num_predict: config.maxTokens,
+        num_ctx: numCtx ?? 2048,
+      };
+    }
+
     return {
-      temperature: config.temperature,
-      num_predict: config.maxTokens,
-      ...(numCtx ? { num_ctx: numCtx } : {}),
+      temperature: Math.min(config.temperature, 0.35),
+      num_predict: Math.min(config.maxTokens, fastPredictCap[lobeId]),
+      num_ctx: Math.min(numCtx ?? 2048, fastCtxCap[lobeId]),
     };
   }
 
@@ -1036,39 +1097,77 @@ class ModelRouter {
     }
   }
 
+  // ── Sliding Window Helpers ─────────────────────────────────
+
+  private getWindowSizeForDomain(domain: NiyahDomain): number {
+    switch (domain) {
+      case 'security':
+      case 'infrastructure':
+        return 4000; // Forensic logs often hide critical signatures in large payloads
+      case 'code':
+      case 'datascience':
+        return 3000; // Logic flow and class structures require medium-large context
+      case 'content':
+      case 'creative':
+        return 1200; // Brief social media or creative text is context-dense
+      default:
+        return 2000; // Standard balance for general/education domains
+    }
+  }
+
+  private getSlidingWindow(input: string, windowSize = 1000): string {
+    if (input.length <= windowSize) {
+      return input;
+    }
+    // Take the first 500 chars, middle 250, and last 250
+    const start = input.slice(0, Math.floor(windowSize / 2));
+    const end = input.slice(-Math.floor(windowSize / 4));
+    const middleStart = Math.floor((input.length - Math.floor(windowSize / 4)) / 2);
+    const middle = input.slice(middleStart, middleStart + Math.floor(windowSize / 4));
+    return `${start} ${middle} ${end}`;
+  }
+
   private measureArabicWeight(input: string, vector: NiyahVector): number {
     let w = 0;
-    const arabicRatio = (input.match(/[\u0600-\u06FF]/g) || []).length / Math.max(input.length, 1);
+    const windowSize = this.getWindowSizeForDomain(vector.domain);
+    const windowedInput = this.getSlidingWindow(input, windowSize);
+    const arabicRatio = (windowedInput.match(/[\u0600-\u06FF]/g) || []).length / Math.max(windowedInput.length, 1);
     w += arabicRatio * 0.5;
     if (vector.dialect !== 'english') w += 0.2;
     if (vector.dialect === 'saudi' || vector.dialect === 'khaleeji') w += 0.1;
     if (vector.roots.length > 2) w += 0.15;
     if (vector.roots.length > 5) w += 0.1;
+    // Boost if the input is predominantly Arabic
+    if (arabicRatio > 0.5) w += 0.1;
     return Math.min(w, 1.0);
   }
 
   private measureCodeWeight(input: string, vector: NiyahVector): number {
     let w = 0;
-    const lower = input.toLowerCase();
+    const windowSize = this.getWindowSizeForDomain(vector.domain);
+    const windowedInput = this.getSlidingWindow(input, windowSize);
+    const lower = windowedInput.toLowerCase();
     if (vector.domain === 'code') w += 0.3;
     if (vector.domain === 'security') w += 0.15;
     for (const t of ['function', 'component', 'hook', 'api', 'typescript', 'react', 'import', 'export', 'class', 'interface', 'async', 'await', 'debug', 'refactor', 'optimize', 'bug', 'error', 'fix', 'deploy', 'build', 'test', 'npm', 'كود', 'فنكشن', 'كومبوننت']) {
       if (lower.includes(t)) w += 0.08;
     }
-    if (input.includes('```') || input.includes('`')) w += 0.2;
-    if (/\.(tsx?|jsx?|py|rs|go|css|html|json|yaml)\b/.test(input)) w += 0.15;
+    if (windowedInput.includes('```') || windowedInput.includes('`')) w += 0.2;
+    if (/\.(tsx?|jsx?|py|rs|go|css|html|json|yaml)\b/.test(windowedInput)) w += 0.15;
     return Math.min(w, 1.0);
   }
 
   private measurePlanWeight(input: string, vector: NiyahVector): number {
     let w = 0;
-    const lower = input.toLowerCase();
+    const windowSize = this.getWindowSizeForDomain(vector.domain);
+    const windowedInput = this.getSlidingWindow(input, windowSize);
+    const lower = windowedInput.toLowerCase();
     if (vector.domain === 'business') w += 0.3;
     for (const t of ['plan', 'strategy', 'architecture', 'design', 'roadmap', 'milestone', 'خطة', 'استراتيجية', 'هيكلة', 'مشروع', 'structure', 'organize', 'phase', 'step', 'مراحل', 'vision', 'رؤية', 'approach', 'system design']) {
       if (lower.includes(t)) w += 0.1;
     }
-    if (/\b(step|phase|stage|مرحلة)\s*\d/i.test(input)) w += 0.15;
-    if (/how (should|do|to)\b/i.test(input)) w += 0.1;
+    if (/\b(step|phase|stage|مرحلة)\s*\d/i.test(windowedInput)) w += 0.15;
+    if (/how (should|do|to)\b/i.test(windowedInput)) w += 0.1;
     return Math.min(w, 1.0);
   }
 }

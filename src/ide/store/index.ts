@@ -5,5 +5,6 @@ export { createLayoutSlice, type LayoutSlice } from './layoutSlice';
 export { createFSSlice, type FSSlice } from './fsSlice';
 export { createGitSlice, type GitSlice } from './gitSlice';
 export { createNiyahSlice, type NiyahSlice } from './niyahSlice';
+export { createSovereignSlice } from './sovereignSlice';
 export type { IDEState } from './types';
 export { collectGitChanges } from './helpers';

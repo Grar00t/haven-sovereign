@@ -28,11 +28,14 @@ export interface EditorGroup {
   size: number; // percentage
 }
 
+export type TerminalProfile = 'local' | 'python' | 'local-ai' | 'gemini' | 'forensics' | 'msf';
+
 export interface TerminalInstance {
   id: string;
   name: string;
   lines: TerminalLine[];
   cwd: string;
+  profile: TerminalProfile;
 }
 
 export interface Notification {

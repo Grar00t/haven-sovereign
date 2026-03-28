@@ -47,16 +47,16 @@ const StatusCell = ({ status, delay }: { status: 'yes' | 'no' | 'partial'; delay
   </motion.td>
 );
 
+const PROVIDERS = [
+  { key: 'haven', name: 'HAVEN', color: 'text-neon-green', glow: true },
+  { key: 'copilot', name: 'Copilot', color: 'text-blue-400', glow: false },
+  { key: 'grok', name: 'Grok', color: 'text-orange-400', glow: false },
+  { key: 'gemini', name: 'Gemini', color: 'text-purple-400', glow: false },
+] as const;
+
 export const Comparison = () => {
   const { language } = useStore();
   const t = useTranslation(language);
-
-  const providers = [
-    { key: 'haven', name: 'HAVEN', color: 'text-neon-green', glow: true },
-    { key: 'copilot', name: 'Copilot', color: 'text-blue-400', glow: false },
-    { key: 'grok', name: 'Grok', color: 'text-orange-400', glow: false },
-    { key: 'gemini', name: 'Gemini', color: 'text-purple-400', glow: false },
-  ];
 
   return (
     <section id="comparison" className="py-32 px-6">
@@ -64,7 +64,7 @@ export const Comparison = () => {
         <ScrollReveal className="text-center mb-20">
           <div className="text-xs font-mono text-neon-green mb-4 uppercase tracking-widest">// SIDE-BY-SIDE</div>
           <h2 className="text-4xl md:text-6xl font-bold leading-none tracking-tighter">
-            {language === 'ar' ? 'لماذا HAVEN؟' : 'Why HAVEN?'} <br/>
+            {language === 'ar' ? 'لماذا HAVEN؟' : 'Why HAVEN?'} <br />
             <span className="text-white/20">{language === 'ar' ? 'المقارنة تتحدث.' : 'The Comparison Speaks.'}</span>
           </h2>
         </ScrollReveal>
@@ -76,7 +76,7 @@ export const Comparison = () => {
                 <thead>
                   <tr className="border-b border-white/5">
                     <th className="py-5 px-6 text-left text-xs font-mono text-white/30 uppercase tracking-wider">Feature</th>
-                    {providers.map(p => (
+                    {PROVIDERS.map(p => (
                       <th key={p.key} className="py-5 px-4 text-center">
                         <span className={`text-sm font-bold ${p.color} ${p.glow ? 'drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]' : ''}`}>
                           {p.name}
@@ -112,7 +112,7 @@ export const Comparison = () => {
             </div>
             {/* Summary Row */}
             <div className="grid grid-cols-4 gap-px bg-white/5 border-t border-white/5">
-              {providers.map(p => {
+              {PROVIDERS.map(p => {
                 const score = features.filter(f => f[p.key as keyof Feature] === 'yes').length;
                 return (
                   <div key={p.key} className="py-5 text-center bg-black/40">

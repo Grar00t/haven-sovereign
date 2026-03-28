@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<title>HAVEN-Sovereign — Local-First AI IDE | Offline, Zero Telemetry, Built in Riyadh</title>
+
+<!-- SEO + Meta -->
+<meta name="description" content="HAVEN-Sovereign: A production-grade, local-first AI IDE built entirely offline. Zero telemetry, three-lobe architecture, PDPL-compliant. Download the Windows EXE and run 100% on your machine."/>
+<meta name="keywords" content="AI IDE, local-first, offline development, sovereign technology, zero-telemetry, HAVEN, Tauri, Rust, three-lobe architecture"/>
+<meta name="author" content="Sulaiman Alshammari (Dragon403)"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#020408"/>
+
+<!-- Open Graph / Twitter Cards -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://haven-sovereign.vercel.app"/>
+<meta property="og:title" content="HAVEN-Sovereign — Local-First AI IDE | 100% Offline"/>
+<meta property="og:description" content="The IDE that runs entirely on your machine. Zero cloud. Zero telemetry. Built in Riyadh 🇸🇦 with Three-Lobe cognitive architecture."/>
+<meta property="og:image" content="https://haven-sovereign.vercel.app/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:locale" content="en_US"/>
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:site" content="@khawrzm"/>
+<meta name="twitter:title" content="HAVEN-Sovereign — Local-First AI IDE"/>
+<meta name="twitter:description" content="100% offline. Zero telemetry. Built in Riyadh 🇸🇦 Download the EXE and build with sovereignty."/>
+<meta name="twitter:image" content="https://haven-sovereign.vercel.app/og-image.png"/>
+<meta name="twitter:creator" content="@Dragon403"/>
+
+<!-- Canonical + Preconnect -->
+<link rel="canonical" href="https://haven-sovereign.vercel.app"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;600;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap"/>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;600;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap');
+
+:root {
+  --void:    #020408;
+  --deep:    #060d16;
+  --surface: #0a1525;
+  --border:  #0e2040;
+  --cyan:    #00d4ff;
+  --gold:    #c9972a;
+  --gold-lt: #f0c060;
+  --red:     #e84040;
+  --green:   #27c93f;
+  --white:   #e8edf5;
+  --muted:   #4a6080;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-arabic: 'Noto Naskh Arabic', serif;
+}
+
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
+
+html { 
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--void);
+  color: var(--white);
+  font-family: var(--font-mono);
+  overflow-x: hidden;
+  cursor: default;
+  line-height: 1.6;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: .5;
+}
+
+/* ── SCANLINES (Subtle) ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.03) 2px,
+    rgba(0,0,0,.03) 4px
+  );
+}
+
+/* ── STAR FIELD ── */
+#stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: var(--white);
+  border-radius: 50%;
+  animation: twinkle var(--dur, 4s) infinite alternate;
+  opacity: var(--op, .4);
+  will-change: opacity;
+}
+
+@keyframes twinkle {
+  0% { opacity: .08; }
+  100% { opacity: var(--op, .8); }
+}
+
+/* ── LAYOUT ── */
+main {
+  position: relative;
+  z-index: 2;
+}
+
+section {
+  position: relative;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  padding: 18px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(2, 4, 8, .85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 212, 255, .08);
+  transition: all .3s ease;
+}
+
+nav.scrolled {
+  background: rgba(2, 4, 8, .98);
+  border-bottom-color: rgba(0, 212, 255, .15);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .3);
+}
+
+.nav-logo {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  color: var(--cyan);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-logo span {
+  color: var(--gold);
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-links a {
+  font-size: 11px;
+  letter-spacing: .15em;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color .2s;
+  position: relative;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--cyan);
+  transition: width .2s;
+}
+
+.nav-links a:hover {
+  color: var(--white);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.nav-cta {
+  font-size: 11px;
+  letter-spacing: .15em;
+  font-weight: 700;
+  color: var(--void);
+  background: var(--cyan);
+  padding: 8px 20px;
+  border-radius: 3px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all .2s;
+  border: 1px solid var(--cyan);
+  cursor: pointer;
+}
+
+.nav-cta:hover {
+  background: transparent;
+  color: var(--cyan);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, .2);
+}
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 140px 0 80px;
+  overflow: hidden;
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: .3em;
+  font-weight: 700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--cyan);
+}
+
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5vw, 72px);
+  line-height: 1.05;
+  font-weight: 400;
+  margin-bottom: 32px;
+  color: var(--white);
+  letter-spacing: -0.02em;
+}
+
+.hero-headline em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #7090b0;
+  margin-bottom: 40px;
+  max-width: 480px;
+}
+
+.hero-arabic {
+  font-family: var(--font-arabic);
+  font-size: 22px;
+  color: var(--gold-lt);
+  margin-bottom: 40px;
+  line-height: 1.8;
+  direction: rtl;
+  text-align: right;
+  padding: 16px 20px;
+  border-right: 3px solid var(--gold);
+  background: rgba(201, 151, 42, .07);
+  border-radius: 3px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cyan);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  padding: 14px 28px;
+  text-decoration: none;
+  text-transform: uppercase;
+  border-radius: 3px;
+  transition: all .2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #40e0ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 255, .3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(0, 212, 255, .3);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  padding: 14px 28px;
+  text-decoration: none;
+  text-transform: uppercase;
+  background: transparent;
+  border-radius: 3px;
+  transition: all .2s;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  border-color: var(--cyan);
+  background: rgba(0, 212, 255, .08);
+  transform: translateY(-2px);
+}
+
+/* ── TERMINAL CARD ── */
+.hero-terminal {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 212, 255, .05);
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.terminal-bar {
+  background: #080f1c;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot-r { background: #e84040; }
+.dot-y { background: #f5a623; }
+.dot-g { background: #27c93f; }
+
+.terminal-title {
+  margin: 0 auto;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .1em;
+}
+
+.terminal-body {
+  padding: 24px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #7090b0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.t-line {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.t-prompt {
+  color: var(--cyan);
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.t-cmd {
+  color: var(--white);
+  font-weight: 500;
+}
+
+.t-output {
+  color: var(--gold-lt);
+  margin-left: 18px;
+}
+
+.t-success {
+  color: var(--green);
+}
+
+.t-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--cyan);
+  vertical-align: middle;
+  animation: blink .9s step-end infinite;
+  margin-left: 4px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── METRICS STRIP ── */
+.metrics {
+  padding: 60px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgba(10, 21, 37, .5);
+}
+
+.metrics-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0;
+}
+
+.metric-item {
+  padding: 32px 24px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+  transition: background .2s;
+}
+
+.metric-item:last-child {
+  border-right: none;
+}
+
+.metric-item:hover {
+  background: rgba(0, 212, 255, .02);
+}
+
+.metric-num {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 400;
+  color: var(--white);
+  display: block;
+  line-height: 1;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.metric-num.gold { color: var(--gold-lt); }
+.metric-num.cyan { color: var(--cyan); }
+.metric-num.green { color: var(--green); }
+
+.metric-label {
+  font-size: 10px;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ── SECTION TITLES ── */
+.section-header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.section-eyebrow {
+  font-size: 10px;
+  letter-spacing: .35em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--white);
+  letter-spacing: -0.02em;
+}
+
+.section-title em {
+  font-style: italic;
+  color: var(--gold-lt);
+}
+
+/* ── PROBLEM SECTION ── */
+#problem {
+  padding: 120px 0;
+}
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 80px;
+}
+
+.problem-card {
+  background: var(--deep);
+  padding: 40px 32px;
+  position: relative;
+  transition: background .2s;
+}
+
+.problem-card:hover {
+  background: var(--surface);
+}
+
+.problem-card::before {
+  content: attr(data-tool);
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--red);
+  opacity: .6;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 3px 8px;
+  border: 1px solid rgba(232, 64, 64, .3);
+  border-radius: 2px;
+}
+
+.problem-icon {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.problem-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+
+.problem-desc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.problem-leak {
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--red);
+  margin-top: 16px;
+  font-weight: 600;
+}
+
+.verdict-box {
+  background: rgba(232, 64, 64, .06);
+  border: 1px solid rgba(232, 64, 64, .2);
+  border-left: 4px solid var(--red);
+  border-radius: 4px;
+  padding: 40px;
+  text-align: center;
+}
+
+.verdict-text {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 36px);
+  color: var(--white);
+  line-height: 1.4;
+}
+
+.verdict-text strong {
+  color: var(--red);
+  font-style: italic;
+}
+
+/* ── SOLUTION SECTION ── */
+#solution {
+  padding: 120px 0;
+  background: linear-gradient(180deg, var(--void) 0%, var(--deep) 50%, var(--void) 100%);
+}
+
+.solution-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.solution-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 212, 255, .08);
+  border: 1px solid rgba(0, 212, 255, .2);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 11px;
+  letter-spacing: .15em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  font-weight: 700;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(.8); }
+}
+
+.solution-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 56px);
+  line-height: 1.05;
+  color: var(--white);
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.solution-title em {
+  font-style: italic;
+  color: var(--cyan);
+}
+
+.solution-desc {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #6a88a8;
+  margin-bottom: 40px;
+}
+
+.feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--white);
+  line-height: 1.6;
+}
+
+.feat-icon {
+  color: var(--gold-lt);
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.feat-text strong {
+  color: var(--cyan);
+}
+
+.solution-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spec-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all .2s;
+}
+
+.spec-card:hover {
+  border-color: rgba(0, 212, 255, .3);
+  background: rgba(0, 212, 255, .02);
+  transform: translateX(6px);
+}
+
+.spec-num {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--gold);
+  flex-shrink: 0;
+  width: 50px;
+  text-align: center;
+}
+
+.spec-label {
+  font-size: 10px;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.spec-value {
+  font-size: 13px;
+  color: var(--white);
+  font-weight: 600;
+}
+
+/* ── THREE LOBE ARCHITECTURE ── */
+#architecture {
+  padding: 120px 0;
+}
+
+.lobe-diagram {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto 80px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobe-ring {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 212, 255, .15);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: rotateSlow 60s linear infinite;
+}
+
+@keyframes rotateSlow {
+  to { transform: rotate(360deg); }
+}
+
+.lobe-core {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 212, 255, .15) 0%, rgba(0, 212, 255, .03) 70%);
+  border: 1px solid rgba(0, 212, 255, .4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 0 40px rgba(0, 212, 255, .15), inset 0 0 30px rgba(0, 212, 255, .05);
+}
+
+.core-label {
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.core-sub {
+  font-size: 8px;
+  color: var(--muted);
+}
+
+.lobe-node {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform .3s;
+}
+
+.lobe-node:hover {
+  transform: scale(1.12);
+}
+
+.lobe-node.cognitive {
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(0, 212, 255, .2) 0%, rgba(0, 212, 255, .05) 70%);
+  border: 1px solid rgba(0, 212, 255, .5);
+  box-shadow: 0 0 20px rgba(0, 212, 255, .2);
+}
+
+.lobe-node.executive {
+  bottom: -10px;
+  right: -10px;
+  background: radial-gradient(circle, rgba(201, 151, 42, .2) 0%, rgba(201, 151, 42, .05) 70%);
+  border: 1px solid rgba(201, 151, 42, .5);
+  box-shadow: 0 0 20px rgba(201, 151, 42, .2);
+}
+
+.lobe-node.sensory {
+  bottom: -10px;
+  left: -10px;
+  background: radial-gradient(circle, rgba(168, 85, 247, .2) 0%, rgba(168, 85, 247, .05) 70%);
+  border: 1px solid rgba(168, 85, 247, .5);
+  box-shadow: 0 0 20px rgba(168, 85, 247, .2);
+}
+
+.node-emoji {
+  font-size: 20px;
+}
+
+.node-name {
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: .1em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.lobes-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lobe-card {
+  background: var(--deep);
+  padding: 40px 32px;
+  transition: background .2s;
+}
+
+.lobe-card:hover {
+  background: var(--surface);
+}
+
+.lobe-indicator {
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+.lobe-card.cognitive .lobe-indicator { background: var(--cyan); }
+.lobe-card.executive .lobe-indicator { background: var(--gold); }
+.lobe-card.sensory .lobe-indicator { background: #a855f7; }
+
+.lobe-emoji {
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.lobe-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.lobe-card.cognitive .lobe-name { color: var(--cyan); }
+.lobe-card.executive .lobe-name { color: var(--gold-lt); }
+.lobe-card.sensory .lobe-name { color: #c084fc; }
+
+.lobe-model {
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.lobe-desc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5a7590;
+}
+
+/* ── TECH STACK ── */
+#stack {
+  padding: 120px 0;
+  background: var(--deep);
+}
+
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stack-cell {
+  background: var(--void);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: background .2s;
+}
+
+.stack-cell:hover {
+  background: var(--surface);
+}
+
+.stack-icon {
+  font-size: 24px;
+}
+
+.stack-name {
+  font-size: 14px;
+  color: var(--white);
+  font-weight: 700;
+}
+
+.stack-detail {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.stack-tag {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.tag-rust { background: rgba(248, 109, 50, .15); color: #f86d32; }
+.tag-ts { background: rgba(49, 120, 198, .15); color: #3178c6; }
+.tag-local { background: rgba(0, 212, 255, .1); color: var(--cyan); }
+.tag-sovereign { background: rgba(201, 151, 42, .12); color: var(--gold-lt); }
+
+/* ── COMPLIANCE ── */
+#compliance {
+  padding: 120px 0;
+}
+
+.compliance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.compliance-visual {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 48px 40px;
+}
+
+.compliance-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--white);
+  margin-bottom: 32px;
+}
+
+.compliance-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.compliance-badge {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 4px;
+  transition: transform .2s;
+}
+
+.compliance-badge:hover {
+  transform: translateX(6px);
+}
+
+.compliance-badge.green {
+  background: rgba(39, 201, 63, .08);
+  border: 1px solid rgba(39, 201, 63, .25);
+}
+
+.compliance-badge.blue {
+  background: rgba(0, 212, 255, .06);
+  border: 1px solid rgba(0, 212, 255, .2);
+}
+
+.compliance-badge.gold {
+  background: rgba(201, 151, 42, .08);
+  border: 1px solid rgba(201, 151, 42, .25);
+}
+
+.cb-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.cb-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.cb-desc {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cb-tick {
+  margin-left: auto;
+  font-size: 18px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.compliance-content {}
+
+.compliance-headline {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3vw, 44px);
+  color: var(--white);
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.compliance-headline em {
+  font-style: italic;
+  color: var(--gold-lt);
+}
+
+.compliance-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #5a7590;
+  margin-bottom: 32px;
+}
+
+.vision-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--gold);
+  border: 1px solid rgba(201, 151, 42, .3);
+  padding: 8px 18px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* ── QUOTE ── */
+#quote {
+  padding: 100px 0;
+  background: linear-gradient(180deg, var(--void) 0%, rgba(0, 212, 255, .02) 50%, var(--void) 100%);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.quote-marks {
+  font-size: 80px;
+  color: rgba(0, 212, 255, .1);
+  font-family: Georgia, serif;
+  line-height: 1;
+  margin-bottom: -20px;
+}
+
+.quote-text {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.5vw, 44px);
+  color: var(--white);
+  max-width: 900px;
+  margin: 0 auto 32px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.quote-text em {
+  font-style: italic;
+  color: var(--cyan);
+}
+
+.quote-source {
+  font-size: 12px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.quote-arabic {
+  font-family: var(--font-arabic);
+  font-size: 28px;
+  color: var(--gold-lt);
+  margin-top: 32px;
+  letter-spacing: .05em;
+  direction: rtl;
+}
+
+/* ── DOWNLOAD SECTION ── */
+#download {
+  padding: 120px 0;
+  background: var(--deep);
+}
+
+.download-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.download-title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5vw, 64px);
+  color: var(--white);
+  margin-bottom: 20px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.download-title em {
+  font-style: italic;
+  color: var(--gold-lt);
+}
+
+.download-sub {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+.download-card {
+  background: var(--void);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: background .2s;
+}
+
+.download-card:hover {
+  background: var(--surface);
+}
+
+.dl-icon {
+  font-size: 32px;
+}
+
+.dl-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.dl-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.dl-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: .12em;
+  font-weight: 700;
+  color: var(--cyan);
+  text-decoration: none;
+  text-transform: uppercase;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  transition: gap .2s;
+}
+
+.dl-link:hover {
+  gap: 14px;
+}
+
+.github-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 32px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.github-label {
+  font-size: 10px;
+  letter-spacing: .25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.github-url {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--white);
+  font-weight: 700;
+}
+
+.github-url span {
+  color: var(--cyan);
+}
+
+.github-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  padding: 14px 32px;
+  text-decoration: none;
+  text-transform: uppercase;
+  border-radius: 3px;
+  transition: all .2s;
+  flex-shrink: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.github-cta:hover {
+  background: var(--cyan);
+  color: var(--void);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 255, .25);
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 60px 40px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: rgba(2, 4, 8, .5);
+}
+
+.footer-logo {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  color: var(--white);
+}
+
+.footer-logo span {
+  color: var(--cyan);
+}
+
+.footer-arabic {
+  font-family: var(--font-arabic);
+  font-size: 16px;
+  color: var(--gold);
+  direction: rtl;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-links a {
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color .2s;
+}
+
+.footer-links a:hover {
+  color: var(--white);
+}
+
+/* ── ANIMATIONS ── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── SHARE SIDEBAR ── */
+.share-bar {
+  position: fixed;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.share-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .2s;
+  color: var(--muted);
+}
+
+.share-btn:hover {
+  background: var(--border);
+  color: var(--white);
+  border-color: rgba(0, 212, 255, .4);
+  transform: scale(1.1);
+}
+
+.share-line {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .hero-inner,
+  .solution-split,
+  .compliance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-terminal {
+    display: none;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .share-bar {
+    display: none;
+  }
+
+  .github-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  footer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  nav {
+    padding: 16px 20px;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  .metrics-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #hero {
+    padding: 100px 0 60px;
+  }
+}
+
+@media (max-width: 600px) {
+  .metrics-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .problem-grid,
+  .lobes-cards,
+  .stack-grid,
+  .download-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .section-header {
+    margin-bottom: 60px;
+  }
+
+  .lobe-diagram {
+    height: 300px;
+  }
+}
+
+/* ── PERFORMANCE ── */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- STARS -->
+<div id="stars"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">HAVEN<span>-SOVEREIGN</span></a>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#download">Download</a>
+  </div>
+  <a href="https://github.com/Grar00t/haven-sovereign" class="nav-cta" target="_blank">⭐ GitHub</a>
+</nav>
+
+<!-- SHARE SIDEBAR -->
+<div class="share-bar">
+  <div class="share-line"></div>
+  <a class="share-btn" href="https://twitter.com/intent/tweet?text=HAVEN-Sovereign:%20Local-first%20AI%20IDE,%20100%25%20offline,%20zero%20telemetry.%20Built%20in%20Riyadh%20%F0%9F%87%B8%F0%9F%87%A6&url=https://github.com/Grar00t/haven-sovereign&hashtags=SovereignAI,LocalFirst" target="_blank" title="Share on X/Twitter">𝕏</a>
+  <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/Grar00t/haven-sovereign" target="_blank" title="Share on LinkedIn">in</a>
+  <a class="share-btn" href="https://news.ycombinator.com/submitlink?u=https://github.com/Grar00t/haven-sovereign&t=HAVEN-Sovereign:%20Local-First%20AI%20IDE" target="_blank" title="HackerNews">Y</a>
+  <a class="share-btn" href="https://github.com/Grar00t/haven-sovereign" target="_blank" title="GitHub">⭐</a>
+  <div class="share-line"></div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-eyebrow">HAVEN-SOVEREIGN · v5.0 · RIYADH 🇸🇦</div>
+        <h1 class="hero-headline">
+          Your IDE,<br/>
+          <em>completely yours.</em>
+        </h1>
+        <p class="hero-sub">
+          HAVEN runs 100% locally on your machine. Zero cloud. Zero telemetry. Three-Lobe cognitive architecture powers intelligent code suggestions, all via Ollama. Built for developers who own their tools.
+        </p>
+        <div class="hero-arabic">الخوارزمية دائماً تعود للوطن</div>
+        <div class="hero-actions">
+          <a href="https://github.com/Grar00t/haven-sovereign/releases/tag/v5.0-exe" class="btn-primary" target="_blank">
+            ⬇ Download v5.0
+          </a>
+          <a href="https://github.com/Grar00t/haven-sovereign" class="btn-ghost" target="_blank">
+            ⭐ GitHub
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-terminal" aria-hidden="true">
+        <div class="terminal-bar">
+          <span class="dot dot-r"></span>
+          <span class="dot dot-y"></span>
+          <span class="dot dot-g"></span>
+          <span class="terminal-title">haven-sovereign v5.0</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">haven --status</span></div>
+          <div class="t-output">🧠 NiyahEngine v3    [ONLINE]</div>
+          <div class="t-output">✓ Cognitive Lobe    deepseek-r1:8b</div>
+          <div class="t-output">✓ Executive Lobe    niyah:latest</div>
+          <div class="t-output">✓ Sensory Lobe      niyah:writer</div>
+          <br/>
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">haven --telemetry check</span></div>
+          <div class="t-success">✓ Zero outbound requests</div>
+          <div class="t-success">✓ All inference: 127.0.0.1:11434</div>
+          <div class="t-success">✓ Phalanx Protocol: ACTIVE</div>
+          <br/>
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">haven --compliance pdpl</span></div>
+          <div class="t-success">✓ PDPL COMPLIANT</div>
+          <div class="t-success">✓ NCA-ECC ALIGNED</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ METRICS ══ -->
+<div class="metrics">
+  <div class="container">
+    <div class="metrics-inner">
+      <div class="metric-item fade-up">
+        <span class="metric-num cyan">100%</span>
+        <span class="metric-label">Offline</span>
+      </div>
+      <div class="metric-item fade-up">
+        <span class="metric-num">0</span>
+        <span class="metric-label">Telemetry Events</span>
+      </div>
+      <div class="metric-item fade-up">
+        <span class="metric-num">3</span>
+        <span class="metric-label">AI Lobes</span>
+      </div>
+      <div class="metric-item fade-up">
+        <span class="metric-num cyan">&lt;5ms</span>
+        <span class="metric-label">Proxy Latency</span>
+      </div>
+      <div class="metric-item fade-up">
+        <span class="metric-num gold">MIT</span>
+        <span class="metric-label">License</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PROBLEM ══ -->
+<section id="problem">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">The Reality</div>
+      <h2 class="section-title">Every mainstream IDE<br/><em>is phoning home.</em></h2>
+    </div>
+
+    <div class="problem-grid fade-up">
+      <div class="problem-card" data-tool="COMPROMISED">
+        <div class="problem-icon">⚙️</div>
+        <div class="problem-name">VS Code</div>
+        <div class="problem-desc">Ships with Microsoft telemetry enabled. Extension APIs expose file system access. Crash reports include code snippets.</div>
+        <div class="problem-leak">→ Microsoft Azure</div>
+      </div>
+      <div class="problem-card" data-tool="CLOUD-ONLY">
+        <div class="problem-icon">🤖</div>
+        <div class="problem-name">Cursor</div>
+        <div class="problem-desc">Every suggestion is cloud-routed. No offline mode exists by design. All inference goes to remote servers.</div>
+        <div class="problem-leak">→ US Data Centers</div>
+      </div>
+      <div class="problem-card" data-tool="TRAINS-ON-YOU">
+        <div class="problem-icon">🐙</div>
+        <div class="problem-name">GitHub Copilot</div>
+        <div class="problem-desc">OpenAI backend. Your private code trains future models unless manually opted out.</div>
+        <div class="problem-leak">→ OpenAI Systems</div>
+      </div>
+    </div>
+
+    <div class="verdict-box fade-up">
+      <p class="verdict-text">
+        You don't own your IDE.<br/>
+        <strong>You have a subscription to your own surveillance.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SOLUTION ══ -->
+<section id="solution">
+  <div class="container">
+    <div class="solution-split">
+      <div class="fade-up">
+        <div class="solution-badge"><span class="badge-dot"></span>Production Ready</div>
+        <h2 class="solution-title">
+          HAVEN:<br/>
+          <em>Built differently.</em>
+        </h2>
+        <p class="solution-desc">
+          Shipped as a standalone Windows EXE. Runs entirely on your machine via local Ollama. No accounts. No subscriptions. No external services.
+        </p>
+        <ul class="feature-list">
+          <li><span class="feat-icon">🔌</span><span class="feat-text"><strong>Air-gap ready</strong> — Works completely offline once Ollama is running</span></li>
+          <li><span class="feat-icon">🧠</span><span class="feat-text"><strong>Three-Lobe architecture</strong> — Cognitive, Executive, Sensory routing via NiyahEngine</span></li>
+          <li><span class="feat-icon">🌐</span><span class="feat-text"><strong>Arabic-First NLP</strong> — Native Gulf Arabic, Arabic Root Lex, RTL-aware</span></li>
+          <li><span class="feat-icon">🔬</span><span class="feat-text"><strong>Forensic-grade audit</strong> — Chain-of-custody logging built in</span></li>
+          <li><span class="feat-icon">🛡️</span><span class="feat-text"><strong>Phalanx Protocol</strong> — Blocks GA, Sentry, Hotjar at kernel level</span></li>
+          <li><span class="feat-icon">⚖️</span><span class="feat-text"><strong>MIT Licensed</strong> — Yours permanently, fully auditable</span></li>
+        </ul>
+      </div>
+
+      <div class="solution-visual fade-up">
+        <div class="spec-card">
+          <div class="spec-num">~2s</div>
+          <div class="spec-info">
+            <div class="spec-label">Startup</div>
+            <div class="spec-value">Cold boot to IDE</div>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-num">&lt;5</div>
+          <div class="spec-info">
+            <div class="spec-label">Proxy Latency (ms)</div>
+            <div class="spec-value">Rust IPC, no overhead</div>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-num">8192</div>
+          <div class="spec-info">
+            <div class="spec-label">Max Context</div>
+            <div class="spec-value">Token window</div>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-num">~100ms</div>
+          <div class="spec-info">
+            <div class="spec-label">Intent Analysis</div>
+            <div class="spec-value">Arabic morpheme routing</div>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-num">~2s</div>
+          <div class="spec-info">
+            <div class="spec-label">Code Gen</div>
+            <div class="spec-value">100 tokens @ 8b</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ARCHITECTURE ══ -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">The Engine</div>
+      <h2 class="section-title">Three-Lobe<br/><em>Cognitive Design</em></h2>
+    </div>
+
+    <div class="lobe-diagram fade-up" aria-hidden="true">
+      <div class="lobe-ring">
+        <div class="lobe-core">
+          <span class="core-label">Niyah</span>
+          <span class="core-sub">Intent Router</span>
+        </div>
+        <div class="lobe-node cognitive">
+          <span class="node-emoji">🧠</span>
+          <span class="node-name">Cognitive</span>
+        </div>
+        <div class="lobe-node executive">
+          <span class="node-emoji">⚙️</span>
+          <span class="node-name">Executive</span>
+        </div>
+        <div class="lobe-node sensory">
+          <span class="node-emoji">👁️</span>
+          <span class="node-name">Sensory</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="lobes-cards fade-up">
+      <div class="lobe-card cognitive">
+        <div class="lobe-indicator"></div>
+        <div class="lobe-emoji">🧠</div>
+        <div class="lobe-name">Cognitive</div>
+        <div class="lobe-model">deepseek-r1:8b</div>
+        <div class="lobe-desc">Deep reasoning and analysis. Handles architecture decisions, security audits, complex decomposition. 8192-token context.</div>
+      </div>
+      <div class="lobe-card executive">
+        <div class="lobe-indicator"></div>
+        <div class="lobe-emoji">⚙️</div>
+        <div class="lobe-name">Executive</div>
+        <div class="lobe-model">niyah:latest</div>
+        <div class="lobe-desc">Action and orchestration. Code generation, workflow execution, concrete implementations.</div>
+      </div>
+      <div class="lobe-card sensory">
+        <div class="lobe-indicator"></div>
+        <div class="lobe-emoji">👁️</div>
+        <div class="lobe-name">Sensory</div>
+        <div class="lobe-model">niyah:writer</div>
+        <div class="lobe-desc">Arabic intent recognition and expression. Native Gulf Arabic, Arabic Root Lex, RTL output.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TECH STACK ══ -->
+<section id="stack">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">Built With</div>
+      <h2 class="section-title">A stack designed for <em>sovereignty.</em></h2>
+    </div>
+
+    <div class="stack-grid fade-up">
+      <div class="stack-cell">
+        <div class="stack-icon">🦀</div>
+        <div class="stack-name">Tauri + Rust</div>
+        <div class="stack-detail">Binary security. No Electron runtime. The ollama_proxy command bypasses WebView CORS entirely.</div>
+        <span class="stack-tag tag-rust">Backend</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">⚛️</div>
+        <div class="stack-name">React + TypeScript</div>
+        <div class="stack-detail">Vite-powered, fully typed. Monaco editor embedded. Arabic RTL native.</div>
+        <span class="stack-tag tag-ts">Frontend</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">🤖</div>
+        <div class="stack-name">Ollama (Local)</div>
+        <div class="stack-detail">All HTTP stays on 127.0.0.1:11434. Zero external URLs. Three models, one proxy.</div>
+        <span class="stack-tag tag-local">100% Local</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">🛡️</div>
+        <div class="stack-name">Phalanx Protocol</div>
+        <div class="stack-detail">Blocks GA, Facebook Pixel, Sentry, Hotjar. Generates breach forensic reports.</div>
+        <span class="stack-tag tag-sovereign">Security</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">🧪</div>
+        <div class="stack-name">Radix UI + Tailwind</div>
+        <div class="stack-detail">Accessible, headless components. Dark-only theme tuned for long sessions.</div>
+        <span class="stack-tag tag-ts">UI</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">🔬</div>
+        <div class="stack-name">Forensic Audit Trail</div>
+        <div class="stack-detail">Hash-verified session records. PDPL-compliant logging. Legally admissible.</div>
+        <span class="stack-tag tag-sovereign">Forensic</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">🗃️</div>
+        <div class="stack-name">lightning-fs + IndexedDB</div>
+        <div class="stack-detail">All data persists locally. Works air-gapped. Storage independent of subscriptions.</div>
+        <span class="stack-tag tag-local">Storage</span>
+      </div>
+      <div class="stack-cell">
+        <div class="stack-icon">📦</div>
+        <div class="stack-name">Standalone .exe</div>
+        <div class="stack-detail">Portable EXE or installer MSI. No Docker. No NPM. Double-click to build.</div>
+        <span class="stack-tag tag-rust">Deployment</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ COMPLIANCE ══ -->
+<section id="compliance">
+  <div class="container">
+    <div class="compliance-grid">
+      <div class="compliance-visual fade-up">
+        <div class="compliance-title">Compliance by Design</div>
+        <div class="compliance-badges">
+          <div class="compliance-badge green">
+            <div class="cb-icon">🏛️</div>
+            <div class="cb-text">
+              <div class="cb-name">PDPL</div>
+              <div class="cb-desc">Saudi Personal Data Protection Law</div>
+            </div>
+            <div class="cb-tick">✓</div>
+          </div>
+          <div class="compliance-badge blue">
+            <div class="cb-icon">🔒</div>
+            <div class="cb-text">
+              <div class="cb-name">NCA-ECC</div>
+              <div class="cb-desc">Cybersecurity Authority Controls</div>
+            </div>
+            <div class="cb-tick">✓</div>
+          </div>
+          <div class="compliance-badge gold">
+            <div class="cb-icon">🇸🇦</div>
+            <div class="cb-text">
+              <div class="cb-name">Vision 2030 Aligned</div>
+              <div class="cb-desc">HUMAIN Initiative Compatible</div>
+            </div>
+            <div class="cb-tick">✓</div>
+          </div>
+          <div class="compliance-badge green">
+            <div class="cb-icon">🧾</div>
+            <div class="cb-text">
+              <div class="cb-name">Chain-of-Custody</div>
+              <div class="cb-desc">Legally Admissible Audit Logs</div>
+            </div>
+            <div class="cb-tick">✓</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="compliance-content fade-up">
+        <h2 class="compliance-headline">
+          The first AI IDE<br/>
+          <em>Saudi enterprises</em><br/>
+          can actually deploy.
+        </h2>
+        <p class="compliance-text">
+          Every mainstream AI IDE creates a PDPL liability. HAVEN eliminates it through architecture: no data leaves the machine. That eliminates the entire compliance burden.
+        </p>
+        <p class="compliance-text">
+          Part of <strong>KHAWRIZM</strong>, the sovereign technology framework giving the Arab world infrastructure it actually controls.
+        </p>
+        <div class="vision-tag">🇸🇦 Vision 2030 Aligned — HUMAIN Initiative</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ QUOTE ══ -->
+<section id="quote">
+  <div class="container">
+    <div class="quote-marks fade-up">"</div>
+    <p class="quote-text fade-up">
+      The gap in AI tooling isn't <em>capability</em>.<br/>
+      It's custody. Who controls the inference?<br/>
+      Who holds the audit log?<br/>
+      <em>Who owns the model?</em>
+    </p>
+    <div class="quote-source fade-up">— HAVEN Design Philosophy · Built in Riyadh 🇸🇦</div>
+    <div class="quote-arabic fade-up">الخوارزمية دائماً تعود للوطن</div>
+  </div>
+</section>
+
+<!-- ══ DOWNLOAD ══ -->
+<section id="download">
+  <div class="container">
+    <div class="download-header fade-up">
+      <h2 class="download-title">Download.<br/><em>Run. Own it.</em></h2>
+      <p class="download-sub">No account. No email. No registration. Just download and build.</p>
+    </div>
+
+    <div class="download-grid fade-up">
+      <div class="download-card">
+        <div class="dl-icon">⚡</div>
+        <div class="dl-name">Portable EXE</div>
+        <div class="dl-desc">Single file. No installation. Drop it anywhere, run it. Works completely offline once Ollama runs locally.</div>
+        <a href="https://github.com/Grar00t/haven-sovereign/releases/tag/v5.0-exe" class="dl-link" target="_blank">HAVEN-Sovereign.exe →</a>
+      </div>
+      <div class="download-card">
+        <div class="dl-icon">🛠️</div>
+        <div class="dl-name">Windows Installer</div>
+        <div class="dl-desc">MSI installer for system deployment. Adds Start Menu, handles Tauri runtime, auto-detects Ollama.</div>
+        <a href="https://github.com/Grar00t/haven-sovereign/releases/tag/v5.0-exe" class="dl-link" target="_blank">HAVEN-Sovereign.msi →</a>
+      </div>
+      <div class="download-card">
+        <div class="dl-icon">🦀</div>
+        <div class="dl-name">Build from Source</div>
+        <div class="dl-desc">Full Tauri + Rust + React source. MIT licensed. Fork it, modify it, own it permanently.</div>
+        <a href="https://github.com/Grar00t/haven-sovereign" class="dl-link" target="_blank">github.com/Grar00t →</a>
+      </div>
+    </div>
+
+    <div class="github-banner fade-up">
+      <div class="github-text">
+        <div class="github-label">Open Source Repository</div>
+        <div class="github-url">github.com/<span>Grar00t</span>/haven-sovereign</div>
+      </div>
+      <a href="https://github.com/Grar00t/haven-sovereign" class="github-cta" target="_blank">
+        ⭐ Star & Download
+      </a>
+    </div>
+
+    <div style="margin-top:40px;padding:32px 40px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1);border-radius:4px;" class="fade-up">
+      <div style="font-size:11px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;margin-bottom:16px;">Quick Start</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-family:var(--font-mono);font-size:13px;">
+        <div><span style="color:var(--muted)"># 1. Run Ollama locally</span></div>
+        <div><span style="color:var(--cyan)">$ </span><span style="color:var(--white)">ollama serve</span></div>
+        <div style="margin-top:8px;"><span style="color:var(--muted)"># 2. Pull the models</span></div>
+        <div><span style="color:var(--cyan)">$ </span><span style="color:var(--white)">ollama pull deepseek-r1:8b && ollama pull niyah:latest</span></div>
+        <div style="margin-top:8px;"><span style="color:var(--muted)"># 3. Launch HAVEN</span></div>
+        <div><span style="color:var(--cyan)">$ </span><span style="color:var(--white)">.\HAVEN-Sovereign.exe</span></div>
+        <div style="margin-top:12px;color:var(--green);">✓ Completely offline. Completely yours.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">HAVEN<span>-SOVEREIGN</span> · v5.0</div>
+  <div class="footer-arabic">الخوارزمية دائماً تعود للوطن</div>
+  <div class="footer-links">
+    <a href="https://github.com/Grar00t/haven-sovereign" target="_blank">GitHub</a>
+    <a href="https://github.com/Grar00t/haven-sovereign/releases" target="_blank">Releases</a>
+    <a href="https://twitter.com/khawrzm" target="_blank">@khawrzm</a>
+    <a href="https://khawrizm.com" target="_blank">KHAWRIZM</a>
+  </div>
+</footer>
+
+<script>
+// ── STAR FIELD (Lazy-loaded)
+(function(){
+  const container = document.getElementById('stars');
+  if (!container) return;
+
+  const count = window.innerWidth < 768 ? 60 : 140;
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.cssText = `
+      left: ${Math.random()*100}%;
+      top: ${Math.random()*100}%;
+      --op: ${(Math.random()*.5+.15).toFixed(2)};
+      --dur: ${(Math.random()*5+3).toFixed(1)}s;
+      width: ${Math.random()<.85 ? 1 : 2}px;
+      height: ${Math.random()<.85 ? 1 : 2}px;
+      animation-delay: ${(Math.random()*6).toFixed(1)}s;
+    `;
+    container.appendChild(star);
+  }
+})();
+
+// ── SCROLL REVEAL (Intersection Observer)
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.fade-up').forEach(el => revealObserver.observe(el));
+
+// ── NAV SCROLL EFFECT
+const nav = document.querySelector('nav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) {
+    nav.classList.add('scrolled');
+  } else {
+    nav.classList.remove('scrolled');
+  }
+}, { passive: true });
+
+// ── SMOOTH SCROLL FOR NAV LINKS
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    const href = link.getAttribute('href');
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+});
+
+// ── PREFETCH GITHUB
+document.addEventListener('DOMContentLoaded', () => {
+  const links = document.querySelectorAll('a[href*="github.com"]');
+  links.forEach(link => link.rel = 'prefetch');
+});
+</script>
+
+</body>
+</html>

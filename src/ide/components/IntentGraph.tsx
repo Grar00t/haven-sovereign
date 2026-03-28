@@ -19,6 +19,7 @@ const DOMAIN_COLOURS: Record<NiyahDomain, string> = {
   creative: '#ec4899',
   business: '#10b981',
   education: '#06b6d4',
+  datascience: '#22d3ee',
   general: '#6b7280',
 };
 
@@ -30,6 +31,7 @@ const DOMAIN_ICONS: Record<NiyahDomain, React.ElementType> = {
   creative: Palette,
   business: Briefcase,
   education: BookOpen,
+  datascience: Brain,
   general: HelpCircle,
 };
 

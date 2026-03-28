@@ -1,0 +1,65 @@
+[[permission]]
+identifier = "allow-gratech-route"
+description = "Allows the frontend to dispatch a payload through the Gratech gateway."
+commands.allow = ["gratech_route"]
+
+[[permission]]
+identifier = "allow-phalanx-health-check"
+description = "Allows the frontend to check the local forensic engine health."
+commands.allow = ["phalanx_health_check"]
+
+[[permission]]
+identifier = "allow-forensics-scan"
+description = "Allows the frontend to fetch a structured local forensic scan report."
+commands.allow = ["forensics_scan"]
+
+[[permission]]
+identifier = "allow-sovereign-code-review"
+description = "Allows the frontend to request a local sovereign code review of the active source file."
+commands.allow = ["sovereign_code_review"]
+
+[[permission]]
+identifier = "allow-emergency-shred"
+description = "Allows the frontend to request a dry-run purge plan from the sovereign kernel."
+commands.allow = ["emergency_shred"]
+
+[[permission]]
+identifier = "allow-updater-status"
+description = "Allows the frontend to inspect whether the desktop updater is configured."
+commands.allow = ["updater_status"]
+
+[[permission]]
+identifier = "allow-fetch-app-update"
+description = "Allows the frontend to check the configured update endpoint for a newer release."
+commands.allow = ["fetch_app_update"]
+
+[[permission]]
+identifier = "allow-install-app-update"
+description = "Allows the frontend to install a previously fetched desktop update."
+commands.allow = ["install_app_update"]
+
+[[permission]]
+identifier = "allow-ensure-local-ollama"
+description = "Allows the frontend to ensure the local Ollama runtime is available."
+commands.allow = ["ensure_local_ollama"]
+
+[[permission]]
+identifier = "allow-ollama-proxy"
+description = "Allows the frontend to proxy Ollama requests through the desktop bridge."
+commands.allow = ["ollama_proxy"]
+
+[[set]]
+identifier = "haven-core"
+description = "Default HAVEN desktop bridge permissions."
+permissions = [
+  "allow-gratech-route",
+  "allow-phalanx-health-check",
+  "allow-forensics-scan",
+  "allow-sovereign-code-review",
+  "allow-emergency-shred",
+  "allow-updater-status",
+  "allow-fetch-app-update",
+  "allow-install-app-update",
+  "allow-ensure-local-ollama",
+  "allow-ollama-proxy",
+]

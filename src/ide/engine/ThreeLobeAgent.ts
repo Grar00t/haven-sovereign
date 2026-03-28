@@ -34,6 +34,7 @@ export interface AgentContext {
   selectedCode?: string;
   recentFiles?: string[];
   openFiles?: string[];
+  forceFullThreeLobe?: boolean;
 }
 
 export interface LobeStatus {
@@ -70,6 +71,8 @@ class ThreeLobeAgent {
   private activeLobe: LobeId | null = null;
   private slashCommands: Map<string, SlashCommand> = new Map();
   private statusListeners: Set<(status: ConnectionStatus) => void> = new Set();
+  private warmupModel: string | null = null;
+  private warmupPromise: Promise<void> | null = null;
 
   constructor() {
     this.registerSlashCommands();
@@ -83,7 +86,17 @@ class ThreeLobeAgent {
   // ── Connection lifecycle ───────────────────────────────────
 
   async connect(): Promise<boolean> {
-    return ollamaService.connect();
+    const ok = await this.ensureOllamaReady();
+    if (!ok) return false;
+
+    await modelRouter.initialize();
+    await modelRouter.updateRuntimeStats();
+    this.applyLocalModelPreferences();
+    await modelRouter.refreshAvailableModels();
+    await modelRouter.updateRuntimeStats();
+    this.warmCpuSmartModel();
+
+    return true;
   }
 
   disconnect() {
@@ -105,8 +118,7 @@ class ThreeLobeAgent {
     return ALL_LOBE_IDS.map(id => ({
       id,
       model: modelRouter.resolveModel(id),
-      available: ollamaService.hasModel(LOBE_CONFIGS[id].model) ||
-        ollamaService.hasModel(LOBE_CONFIGS[id].fallbackModel),
+      available: ollamaService.hasModel(modelRouter.resolveModel(id)),
       busy: this.activeLobe === id,
     }));
   }
@@ -121,6 +133,89 @@ class ThreeLobeAgent {
 
   clearHistory() {
     this.history = [];
+  }
+
+  private async ensureOllamaReady(): Promise<boolean> {
+    let ok = await ollamaService.connect();
+    if (ok) return true;
+
+    const bridgeResult = await sovereignTauri.ensureLocalOllama();
+    if (!bridgeResult.available) {
+      return false;
+    }
+
+    ok = await ollamaService.connect();
+    return ok;
+  }
+
+  private buildThreeLobeContext(context: AgentContext): string | undefined {
+    const parts: string[] = [];
+
+    if (context.activeFile) {
+      parts.push(`Active file: ${context.activeFile}`);
+    }
+
+    if (context.language) {
+      parts.push(`Language: ${context.language}`);
+    }
+
+    if (context.openFiles && context.openFiles.length > 0) {
+      parts.push(`Open files: ${context.openFiles.slice(0, 8).join(', ')}`);
+    }
+
+    if (context.recentFiles && context.recentFiles.length > 0) {
+      parts.push(`Recent files: ${context.recentFiles.slice(0, 8).join(', ')}`);
+    }
+
+    if (context.selectedCode) {
+      parts.push(`Code context:\n${context.selectedCode.slice(0, 4000)}`);
+    }
+
+    return parts.length > 0 ? parts.join('\n\n') : undefined;
+  }
+
+  private shouldUseFullThreeLobe(
+    input: string,
+    context: AgentContext,
+    routing: RoutingDecision,
+  ): boolean {
+    if (context.forceFullThreeLobe) return true;
+    if (this.isCpuSmartMode()) return false;
+    if (!sovereignTauri.isDesktopShell()) return false;
+    if (input.trim().startsWith('/')) return false;
+    return routing.parallel;
+  }
+
+  private isCpuSmartMode(): boolean {
+    return modelRouter.getPerformanceMode() !== 'gpu';
+  }
+
+  private applyLocalModelPreferences() {
+    const available = new Set(ollamaService.getModels().map(model => model.name));
+    const cpuSmart = this.isCpuSmartMode();
+    const preferenceOrder: Record<LobeId, string[]> = {
+      cognitive: cpuSmart
+        ? ['deepseek-r1:1.5b', 'niyah:v3', 'niyah:v4', 'niyah:latest', 'llama3.2:3b']
+        : ['niyah:v4', 'niyah:v3', 'deepseek-r1:1.5b', 'niyah:latest', 'llama3.2:3b'],
+      executive: cpuSmart
+        ? ['deepseek-r1:1.5b', 'niyah:v3', 'niyah:v2', 'niyah:latest', 'llama3.2:3b']
+        : ['niyah:v3', 'niyah:v2', 'deepseek-r1:1.5b', 'niyah:latest', 'llama3.2:3b'],
+      sensory: cpuSmart
+        ? ['deepseek-r1:1.5b', 'niyah:writer', 'niyah:latest', 'niyah:v2', 'niyah:v3']
+        : ['niyah:writer', 'niyah:v2', 'niyah:latest', 'niyah:v3', 'deepseek-r1:1.5b'],
+    };
+
+    for (const lobeId of ALL_LOBE_IDS) {
+      const currentInfo = modelRouter.getLobeModelInfo(lobeId);
+      if (currentInfo.preferred && available.has(currentInfo.preferred)) {
+        continue;
+      }
+
+      const chosen = preferenceOrder[lobeId].find(model => available.has(model));
+      if (chosen) {
+        modelRouter.setLobeModel(lobeId, chosen);
+      }
+    }
   }
 
   // ── Model management ──────────────────────────────────────
@@ -211,19 +306,12 @@ class ThreeLobeAgent {
     callbacks.onNiyahVector?.(niyahSession.vector);
 
     // ── Step 2: Route to correct lobe(s) ─────────────────────
-    const routing = modelRouter.route(niyahSession.vector, input);
+    const routing = modelRouter.routeAndTrace(niyahSession.vector, input);
     callbacks.onRouting?.(routing);
 
     // ── Step 3: Check Ollama connection ──────────────────────
     if (ollamaService.getStatus() !== 'connected') {
-      // SOVEREIGN PRIORITY: Try local first, aggressively.
-      let ok = await ollamaService.connect();
-      if (!ok) {
-        // Attempt to start Ollama via Sovereign Bridge if locally available
-        await sovereignTauri.dispatchSecurePayload('LOCALHOST', 'START_OLLAMA');
-        ok = await ollamaService.connect();
-      }
-
+      const ok = await this.connect();
       if (!ok) {
         // Fallback to NiyahEngine template response
         return this.fallbackResponse(niyahSession, routing, startTime, callbacks);
@@ -233,8 +321,31 @@ class ThreeLobeAgent {
     // ── Step 4: Execute through lobe(s) ──────────────────────
     try {
       let response: string;
+      let finalModel = modelRouter.resolveModel(routing.primary);
+      let finalSession = niyahSession;
+      const cpuSmart = this.isCpuSmartMode();
 
-      if (routing.parallel && routing.secondary) {
+      if (cpuSmart && this.warmupPromise) {
+        await Promise.race([
+          this.warmupPromise,
+          new Promise(resolve => setTimeout(resolve, 3000)),
+        ]);
+      }
+
+      if (this.shouldUseFullThreeLobe(input, context, routing)) {
+        const fullResult = await this.executeFullThreeLobe(input, context, niyahSession, callbacks);
+        response = fullResult.merged;
+        finalModel = fullResult.modelsUsed.join(' | ');
+        finalSession = {
+          ...niyahSession,
+          lobes: fullResult.lobeResults,
+          response: fullResult.merged,
+        };
+      } else if (cpuSmart) {
+        response = await this.executeSingle(
+          input, routing.primary, context, niyahSession, callbacks,
+        );
+      } else if (routing.parallel && routing.secondary) {
         response = await this.executeParallel(
           input, routing.primary, routing.secondary, context, niyahSession, callbacks,
         );
@@ -256,8 +367,8 @@ class ThreeLobeAgent {
         timestamp: Date.now(),
         lobe: routing.primary,
         lobeNameAr: LOBE_CONFIGS[routing.primary].nameAr,
-        model: modelRouter.resolveModel(routing.primary),
-        niyahSession,
+        model: finalModel,
+        niyahSession: finalSession,
         routing,
         latencyMs,
       };
@@ -270,6 +381,46 @@ class ThreeLobeAgent {
       callbacks.onError?.(errMsg);
       return this.fallbackResponse(niyahSession, routing, startTime, callbacks);
     }
+  }
+
+  private async executeFullThreeLobe(
+    input: string,
+    context: AgentContext,
+    niyah: NiyahSession,
+    callbacks: Partial<StreamCallbacks>,
+  ) {
+    const fullContext = this.buildThreeLobeContext(context);
+
+    return modelRouter.processThreeLobes(
+      input,
+      niyah.vector,
+      fullContext,
+      {
+        onToken: (lobe, token) => {
+          this.activeLobe = lobe;
+          callbacks.onToken?.(token, lobe);
+        },
+        onLobeStart: (lobe) => {
+          this.activeLobe = lobe;
+          callbacks.onLobeStart?.(lobe, modelRouter.resolveModel(lobe));
+        },
+        onLobeComplete: (lobe, response) => {
+          callbacks.onLobeEnd?.(lobe, response.latencyMs);
+          if (this.activeLobe === lobe) {
+            this.activeLobe = null;
+          }
+        },
+        onError: (lobe, error) => {
+          callbacks.onError?.(`${LOBE_CONFIGS[lobe].nameAr}: ${error}`);
+          if (this.activeLobe === lobe) {
+            this.activeLobe = null;
+          }
+        },
+        onAllComplete: () => {
+          this.activeLobe = null;
+        },
+      },
+    );
   }
 
   // ── Single lobe execution (streaming) ─────────────────────
@@ -289,24 +440,139 @@ class ThreeLobeAgent {
     callbacks.onLobeStart?.(lobeId, model);
     const startTime = performance.now();
 
+    if (this.isCpuSmartMode()) {
+      const response = await this.executeCpuSmartSingle(
+        input,
+        lobeId,
+        model,
+        systemPrompt,
+        options,
+        context,
+        niyah,
+        callbacks,
+      );
+      this.activeLobe = null;
+      callbacks.onLobeEnd?.(lobeId, performance.now() - startTime);
+      return response;
+    }
+
     // Build chat messages
     const messages = this.buildMessages(systemPrompt, input, context, niyah);
 
     let fullResponse = '';
-    for await (const chunk of ollamaService.chatStream({
-      model,
-      messages,
-      options,
-    })) {
-      fullResponse += chunk.token;
-      callbacks.onToken?.(chunk.token, lobeId);
-      if (chunk.done) break;
+
+    const streamResponse = async () => {
+      for await (const chunk of ollamaService.chatStream({
+        model,
+        messages,
+        options,
+      })) {
+        fullResponse += chunk.token;
+        callbacks.onToken?.(chunk.token, lobeId);
+        if (chunk.done) break;
+      }
+    };
+
+    try {
+      await modelRouter.withLobeTimeout(lobeId, streamResponse());
+    } catch (error) {
+      ollamaService.cancelAll();
+      console.warn(`[ThreeLobeAgent] ${lobeId} stream fallback:`, error);
+    }
+
+    if (!fullResponse.trim()) {
+      try {
+        const recovered = await modelRouter.withLobeTimeout(
+          lobeId,
+          ollamaService.chat({
+            model,
+            messages,
+            options: {
+              ...options,
+              num_predict: Math.min(options.num_predict || 256, 256),
+            },
+          }),
+          12_000,
+        );
+        fullResponse = recovered?.message?.content?.trim() || '';
+      } catch (error) {
+        console.warn(`[ThreeLobeAgent] ${lobeId} recovery fallback failed:`, error);
+      }
     }
 
     this.activeLobe = null;
     callbacks.onLobeEnd?.(lobeId, performance.now() - startTime);
 
     return fullResponse || niyah.response; // Fallback to NiyahEngine template
+  }
+
+  private warmCpuSmartModel() {
+    if (!this.isCpuSmartMode() || this.warmupPromise) return;
+
+    const model = modelRouter.resolveModel('executive');
+    if (!model || this.warmupModel === model) return;
+
+    this.warmupModel = model;
+    this.warmupPromise = (async () => {
+      try {
+        await ollamaService.generate({
+          model,
+          prompt: 'Reply with the single word: ready',
+          options: {
+            temperature: 0,
+            num_predict: 8,
+            num_ctx: 256,
+          },
+        });
+      } catch (error) {
+        console.warn('[ThreeLobeAgent] cpu-smart warmup failed:', error);
+        this.warmupModel = null;
+      } finally {
+        this.warmupPromise = null;
+      }
+    })();
+  }
+
+  private async executeCpuSmartSingle(
+    input: string,
+    lobeId: LobeId,
+    model: string,
+    systemPrompt: string,
+    options: { temperature?: number; num_predict?: number; num_ctx?: number },
+    context: AgentContext,
+    niyah: NiyahSession,
+    callbacks: Partial<StreamCallbacks>,
+  ): Promise<string> {
+    const prompt = this.buildCpuSmartPrompt(input, context, niyah);
+
+    try {
+      const result = await modelRouter.withLobeTimeout(
+        lobeId,
+        ollamaService.generate({
+          model,
+          system: systemPrompt,
+          prompt,
+          options: {
+            temperature: Math.min(options.temperature ?? 0.25, 0.25),
+            num_predict: Math.min(options.num_predict ?? 160, 160),
+            num_ctx: Math.min(options.num_ctx ?? 1024, 1024),
+            top_p: 0.9,
+            top_k: 40,
+          },
+        }),
+        10_000,
+      );
+
+      const content = result?.response?.trim() || '';
+      if (content) {
+        callbacks.onToken?.(content, lobeId);
+        return content;
+      }
+    } catch (error) {
+      console.warn(`[ThreeLobeAgent] ${lobeId} cpu-smart fallback failed:`, error);
+    }
+
+    return niyah.response;
   }
 
   // ── Parallel lobe execution ───────────────────────────────
@@ -449,6 +715,41 @@ class ThreeLobeAgent {
     return messages;
   }
 
+  private buildCpuSmartPrompt(
+    input: string,
+    context: AgentContext,
+    niyah?: NiyahSession,
+  ): string {
+    const sections: string[] = [
+      'Answer in 3 short bullet points max unless the user explicitly asks for code.',
+    ];
+
+    if (niyah) {
+      sections.push(
+        `Intent: ${niyah.vector.intent}`,
+        `Domain: ${niyah.vector.domain}`,
+        `Dialect: ${niyah.vector.dialect}`,
+      );
+    }
+
+    if (context.activeFile) {
+      sections.push(`Active file: ${context.activeFile}`);
+    }
+
+    if (context.language) {
+      sections.push(`Language: ${context.language}`);
+    }
+
+    if (context.selectedCode) {
+      sections.push(
+        `Selected code:\n\`\`\`${context.language || ''}\n${context.selectedCode.slice(0, 600)}\n\`\`\``,
+      );
+    }
+
+    sections.push(`User request:\n${input}`);
+    return sections.join('\n\n');
+  }
+
   // ── Merge parallel lobe results ───────────────────────────
 
   private mergeLobeResults(
@@ -505,6 +806,34 @@ class ThreeLobeAgent {
   // ── Slash commands ────────────────────────────────────────
 
   private registerSlashCommands() {
+    this.registerCommand({
+      name: '/all',
+      description: 'Run full three-lobe analysis on the current prompt',
+      descriptionAr: 'تشغيل التحليل الكامل للفصوص الثلاثة',
+      handler: async (args, ctx, callbacks) => {
+        if (!args) return '*Usage:* `/all <your prompt>`';
+
+        const forcedContext: AgentContext = {
+          ...ctx,
+          forceFullThreeLobe: true,
+        };
+
+        const niyahSession = niyahEngine.process(args, forcedContext);
+        callbacks?.onNiyahVector?.(niyahSession.vector);
+
+        if (ollamaService.getStatus() !== 'connected') {
+          const ok = await this.connect();
+          if (!ok) {
+            const fallbackRouting = modelRouter.route(niyahSession.vector, args);
+            return `⚡ **Offline Mode** — Ollama not connected\n\n${niyahSession.response}\n\n---\n*Routing: ${fallbackRouting.primary} → ${fallbackRouting.reason}*\n*Connect Ollama for full Three-Lobe intelligence.*`;
+          }
+        }
+
+        const fullResult = await this.executeFullThreeLobe(args, forcedContext, niyahSession, callbacks);
+        return fullResult.merged;
+      },
+    });
+
     this.registerCommand({
       name: '/help',
       description: 'Show all available commands',
@@ -747,6 +1076,43 @@ class ThreeLobeAgent {
           `Analyze this for Saudi digital sovereignty compliance (PDPL, NCA-ECC, SDAIA). Flag any external dependencies, telemetry, or data leaks:\n\`\`\`\n${code}\n\`\`\``,
           'cognitive', ctx, callbacks,
         );
+      },
+    });
+
+    this.registerCommand({
+      name: '/gemini',
+      description: 'Run Gemini CLI from inside HAVEN',
+      descriptionAr: 'تشغيل Gemini CLI من داخل HAVEN',
+      handler: async (args, ctx) => {
+        const prompt = args.trim();
+        if (!prompt) {
+          return '*Usage:* `/gemini <prompt>`\n\nExample: `/gemini explain why this React state flow is glitching`';
+        }
+
+        if (!sovereignTauri.isDesktopShell()) {
+          return '⚠️ `/gemini` works only inside the HAVEN desktop shell. The current browser preview cannot execute local desktop tools.';
+        }
+
+        const contextParts: string[] = [];
+        if (ctx.activeFile) contextParts.push(`Active file: ${ctx.activeFile}`);
+        if (ctx.language) contextParts.push(`Language: ${ctx.language}`);
+        if (ctx.selectedCode) contextParts.push(`Selected code:\n${ctx.selectedCode.slice(0, 2500)}`);
+        const contextBlock = contextParts.length > 0
+          ? `\n\nWorkspace context:\n${contextParts.join('\n\n')}`
+          : '';
+
+        const result = await sovereignTauri.runTerminalCommand(
+          'gemini',
+          ['-p', `${prompt}${contextBlock}`, '--output-format', 'text'],
+          undefined,
+          60000,
+        );
+
+        if (!result.ok) {
+          return `❌ Gemini CLI failed.\n\n${result.stderr || result.stdout || 'No error output returned.'}`;
+        }
+
+        return `## Gemini CLI\n\n${result.stdout.trim() || '*Gemini returned no visible output.*'}`;
       },
     });
 
@@ -1160,7 +1526,7 @@ class ThreeLobeAgent {
     const niyah = niyahEngine.process(prompt, context);
 
     if (ollamaService.getStatus() !== 'connected') {
-      await ollamaService.connect();
+      await this.connect();
     }
 
     if (ollamaService.getStatus() === 'connected') {

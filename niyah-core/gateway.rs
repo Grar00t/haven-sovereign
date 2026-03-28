@@ -1,7 +1,5 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
 use rand::Rng;
 
 // ── P2P Node Definition ──────────────────────────────────────
@@ -39,7 +37,11 @@ impl GratechGateway {
         let nodes = self.nodes.lock().unwrap();
         
         if let Some(node) = nodes.get(target_id) {
-            println!("🌐 [GRATECH GATEWAY] Routing {} bytes to node {}", payload.len(), target_id);
+            println!(
+                "🌐 [GRATECH GATEWAY] Routing {} bytes to node {}",
+                payload.len(),
+                mask_id(&node.id)
+            );
             println!("   ↳ Path: LOCAL -> MESH -> {} (Latency: {}ms)", node.status, node.latency_ms);
 
             // Simulate network jitter

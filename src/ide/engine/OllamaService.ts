@@ -4,6 +4,8 @@
 // Zero cloud. Zero telemetry. Every token stays on YOUR machine.
 // ══════════════════════════════════════════════════════════════
 
+import { invoke, isTauri } from '@tauri-apps/api/core';
+
 export interface OllamaModel {
   name: string;
   size: number;          // bytes
@@ -149,6 +151,7 @@ class OllamaService {
   private endpoints: OllamaEndpoint[] = [];
   private _endpointLabel: string = 'Local';
   private authTokens: Record<string, string> = {};
+  private readonly desktopBridge = typeof window !== 'undefined' && isTauri();
 
   constructor(baseUrl = 'http://localhost:11434') {
     // Restore persisted endpoint
@@ -173,6 +176,16 @@ class OllamaService {
 
   /** Human-readable label for current endpoint */
   get endpointLabel(): string { return this._endpointLabel; }
+
+  /** Whether the active endpoint is truly local to this machine */
+  isLocalEndpoint(): boolean {
+    try {
+      const url = new URL(this._baseUrl);
+      return ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+    } catch {
+      return false;
+    }
+  }
 
   /** Get all saved endpoints */
   getEndpoints(): OllamaEndpoint[] { return [...this.endpoints]; }
@@ -245,20 +258,43 @@ class OllamaService {
     return !!this.authTokens[this._baseUrl];
   }
 
-  /** Build headers with auth if token exists for current endpoint */
-  private authHeaders(extra: Record<string, string> = {}): Record<string, string> {
-    const token = this.authTokens[this._baseUrl];
+  /** Build headers with auth if token exists for the given endpoint (or current endpoint). */
+  private authHeadersFor(url: string, extra: Record<string, string> = {}): Record<string, string> {
+    const normalized = url.replace(/\/+$/, '');
+    const token = this.authTokens[normalized];
     return {
       ...extra,
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
   }
 
+  /** Build headers with auth if token exists for current endpoint */
+  private authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+    return this.authHeadersFor(this._baseUrl, extra);
+  }
+
+  private async proxy<T>(path: string, body?: unknown): Promise<T> {
+    return invoke<T>('ollama_proxy', {
+      request: {
+        path,
+        ...(body !== undefined ? { body } : {}),
+      },
+    });
+  }
+
+  private chunkText(text: string): string[] {
+    if (!text) return [];
+    const chunks = text.match(/.{1,24}(\s|$)/g)?.map(part => part) ?? [];
+    return chunks.length > 0 ? chunks : [text];
+  }
+
   // ── Event emitter ──────────────────────────────────────────
   on(event: OllamaEvent, fn: OllamaListener) {
     if (!this.listeners.has(event)) this.listeners.set(event, new Set());
     this.listeners.get(event)!.add(fn);
-    return () => this.listeners.get(event)?.delete(fn);
+    return () => {
+      void this.listeners.get(event)?.delete(fn);
+    };
   }
 
   private emit(event: OllamaEvent, ...args: any[]) {
@@ -278,29 +314,83 @@ class OllamaService {
 
   async connect(): Promise<boolean> {
     this.setStatus('connecting');
-    try {
-      const res = await fetch(`${this._baseUrl}/api/tags`, {
-        signal: AbortSignal.timeout(5000),
-        headers: this.authHeaders(),
-      });
-      if (!res.ok) throw new Error(`Ollama returned ${res.status}`);
-      const data = await res.json();
-      this.availableModels = data.models || [];
-      this.setStatus('connected');
-
-      // Start health check every 30s
-      this.stopHealthCheck();
-      this.healthCheckInterval = setInterval(() => this.healthPing(), 30_000);
-
-      return true;
-    } catch (err) {
-      this.setStatus('error');
-      this.emit('error', err instanceof Error ? err.message : 'Cannot reach Ollama');
-      return false;
+    if (this.desktopBridge) {
+      try {
+        const data = await this.proxy<{ models?: OllamaModel[] }>('/api/tags');
+        this.availableModels = data.models || [];
+        this._baseUrl = 'http://127.0.0.1:11434';
+        this._endpointLabel = 'Local';
+        this.setStatus('connected');
+        this.stopHealthCheck();
+        this.healthCheckInterval = setInterval(() => this.healthPing(), 30_000);
+        return true;
+      } catch (err) {
+        this.setStatus('error');
+        this.emit('error', err instanceof Error ? err.message : 'Cannot reach Ollama');
+        return false;
+      }
     }
+
+    const candidates = Array.from(new Set([
+      this._baseUrl,
+      'http://127.0.0.1:11434',
+      'http://localhost:11434',
+    ].map(url => url.replace(/\/+$/, ''))));
+
+    let lastError: unknown = null;
+
+    for (const candidate of candidates) {
+      try {
+        const res = await fetch(`${candidate}/api/tags`, {
+          signal: AbortSignal.timeout(5000),
+          headers: this.authHeadersFor(candidate),
+        });
+        if (!res.ok) throw new Error(`Ollama returned ${res.status}`);
+
+        const data = await res.json();
+        this.availableModels = data.models || [];
+
+        if (candidate !== this._baseUrl) {
+          this._baseUrl = candidate;
+          const existing = this.endpoints.find(e => e.url === candidate);
+          if (!existing) {
+            this.endpoints.unshift({ url: candidate, label: this.deriveLabel(candidate), addedAt: Date.now() });
+            saveEndpoints(this.endpoints);
+          }
+          this._endpointLabel = existing?.label || this.deriveLabel(candidate);
+          localStorage.setItem(ACTIVE_EP_KEY, candidate);
+          this.emit('endpoint-change', candidate, this._endpointLabel);
+        }
+
+        this.setStatus('connected');
+
+        // Start health check every 30s
+        this.stopHealthCheck();
+        this.healthCheckInterval = setInterval(() => this.healthPing(), 30_000);
+
+        return true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    this.setStatus('error');
+    this.emit('error', lastError instanceof Error ? lastError.message : 'Cannot reach Ollama');
+    return false;
   }
 
   private async healthPing() {
+    if (this.desktopBridge) {
+      try {
+        const data = await this.proxy<{ models?: OllamaModel[] }>('/api/tags');
+        this.availableModels = data.models || [];
+        this.setStatus('connected');
+      } catch {
+        this.setStatus('error');
+      }
+      return;
+    }
+
     try {
       const res = await fetch(`${this._baseUrl}/api/tags`, {
         signal: AbortSignal.timeout(3000),
@@ -384,6 +474,16 @@ class OllamaService {
       const ok = await this.connect();
       if (!ok) return null;
     }
+
+    if (this.desktopBridge) {
+      try {
+        return await this.proxy<OllamaGenerateResponse>('/api/generate', { ...req, stream: false });
+      } catch (err) {
+        this.emit('error', `Generate failed: ${(err as Error).message}`);
+        return null;
+      }
+    }
+
     const id = `gen-${Date.now()}`;
     const ac = new AbortController();
     this.abortControllers.set(id, ac);
@@ -415,6 +515,19 @@ class OllamaService {
       const ok = await this.connect();
       if (!ok) return;
     }
+
+    if (this.desktopBridge) {
+      const result = await this.generate({ ...req, stream: false });
+      const response = result?.response || '';
+      const chunks = this.chunkText(response);
+      for (const chunk of chunks) {
+        this.emit('stream-token', chunk);
+        yield { token: chunk, done: false };
+      }
+      yield { token: '', done: true };
+      return;
+    }
+
     const id = `stream-${Date.now()}`;
     const ac = new AbortController();
     this.abortControllers.set(id, ac);
@@ -463,6 +576,15 @@ class OllamaService {
       if (!ok) return null;
     }
 
+    if (this.desktopBridge) {
+      try {
+        return await this.proxy<OllamaChatResponse>('/api/chat', { ...req, stream: false });
+      } catch (err) {
+        this.emit('error', `Chat failed: ${(err as Error).message}`);
+        return null;
+      }
+    }
+
     try {
       const res = await fetch(`${this._baseUrl}/api/chat`, {
         method: 'POST',
@@ -485,6 +607,19 @@ class OllamaService {
       const ok = await this.connect();
       if (!ok) return;
     }
+
+    if (this.desktopBridge) {
+      const result = await this.chat({ ...req, stream: false });
+      const response = result?.message?.content || '';
+      const chunks = this.chunkText(response);
+      for (const chunk of chunks) {
+        this.emit('stream-token', chunk);
+        yield { token: chunk, done: false };
+      }
+      yield { token: '', done: true };
+      return;
+    }
+
     const id = `chat-stream-${Date.now()}`;
     const ac = new AbortController();
     this.abortControllers.set(id, ac);
@@ -532,6 +667,13 @@ class OllamaService {
 
   // ── /api/show — Model metadata (parameter size, quantization, default ctx) ──
   async showModel(name: string): Promise<OllamaShowResponse | null> {
+    if (this.desktopBridge) {
+      try {
+        return await this.proxy<OllamaShowResponse>('/api/show', { name });
+      } catch {
+        return null;
+      }
+    }
     try {
       const res = await fetch(`${this._baseUrl}/api/show`, {
         method: 'POST',
@@ -554,6 +696,14 @@ class OllamaService {
 
   // ── /api/ps — Running models (VRAM, context, expiry) ──────
   async listRunning(): Promise<OllamaRunningModel[]> {
+    if (this.desktopBridge) {
+      try {
+        const data = await this.proxy<OllamaPsResponse>('/api/ps');
+        return data.models || [];
+      } catch {
+        return [];
+      }
+    }
     try {
       const res = await fetch(`${this._baseUrl}/api/ps`, {
         signal: AbortSignal.timeout(3000),

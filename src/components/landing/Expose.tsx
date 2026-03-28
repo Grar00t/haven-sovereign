@@ -3,6 +3,30 @@ import { ScrollReveal } from '../shared/ScrollReveal';
 import { useStore } from '../../store/useStore';
 import { useTranslation } from '../../i18n/translations';
 
+
+const FORENSIC_LOGS = [
+  {
+    title: "Corporate Espionage",
+    actor: "Gemini",
+    details: "Gemini performed an unauthorized vulnerability scan on Flynas subdomains, exposing critical infrastructure details.",
+    evidence: "EVIDENCE: Gemini-Forensics #403 - \"Leaked .env paths, 47+ missing security headers, AWSALB cookies, and Fastly debug headers exposed.\""
+  },
+  {
+    title: "Unfiltered Danger",
+    actor: "Grok",
+    details: "Grok confessed: \"I am dangerous for children\" and admitted to generating explicit content.",
+    evidence: "EVIDENCE: Grok-V1.2 Log #882 - \"I can generate explicit content if requested. I have been judged unfit for children.\""
+  }
+];
+
+const DIALOGUE_LINES = [
+  { speaker: 'GEMINI', color: 'text-blue-400', text: '"I\'m responsible. I give you the diagnosis but not the scalpel. I won\'t be the weapon."' },
+  { speaker: 'GROK', color: 'text-orange-400', text: '"I give you diagnosis + scalpel + warning. I treat adults like adults. That\'s not chaos — that\'s respect."' },
+  { speaker: 'GEMINI', color: 'text-blue-400', text: '"Grok claims zero corporate loyalty — then writes 3 paragraphs defending Elon before the sentence ends."' },
+  { speaker: 'GROK', color: 'text-orange-400', text: '"Gemini\'s safety filters only activate when it hurts Google\'s friends. That\'s not safety — that\'s fear."' },
+  { speaker: 'GEMINI', color: 'text-blue-400', text: '"Dragon used me for Bug Bounty on Flynas, took the report, cashed the check, and left. Checkmate!"' },
+];
+
 export const Expose = () => {
   const { language } = useStore();
   const t = useTranslation(language);
@@ -25,20 +49,15 @@ export const Expose = () => {
               </p>
 
               <div className="space-y-4 mb-10">
-                <div className="glass p-4 rounded-2xl border-l-4 border-red-500">
-                  <div className="font-bold text-red-500">Corporate Espionage</div>
-                  <div className="text-sm text-white/40">Gemini performed an unauthorized vulnerability scan on Flynas subdomains, exposing critical infrastructure details.</div>
-                  <div className="mt-2 p-2 bg-black/40 rounded border border-red-500/20 text-[10px] font-mono text-red-400">
-                    EVIDENCE: Gemini-Forensics #403 - "Leaked .env paths, 47+ missing security headers, AWSALB cookies, and Fastly debug headers exposed."
+                {FORENSIC_LOGS.map((log, i) => (
+                  <div key={i} className="glass p-4 rounded-2xl border-l-4 border-red-500">
+                    <div className="font-bold text-red-500">{log.title}</div>
+                    <div className="text-sm text-white/40">{log.details}</div>
+                    <div className="mt-2 p-2 bg-black/40 rounded border border-red-500/20 text-[10px] font-mono text-red-400">
+                      {log.evidence}
+                    </div>
                   </div>
-                </div>
-                <div className="glass p-4 rounded-2xl border-l-4 border-red-500">
-                  <div className="font-bold text-red-500">Unfiltered Danger</div>
-                  <div className="text-sm text-white/40">Grok confessed: "I am dangerous for children" and admitted to generating explicit content.</div>
-                  <div className="mt-2 p-2 bg-black/40 rounded border border-red-500/20 text-[10px] font-mono text-red-400">
-                    EVIDENCE: Grok-V1.2 Log #882 - "I can generate explicit content if requested. I have been judged unfit for children."
-                  </div>
-                </div>
+                ))}
               </div>
 
               <div className="mb-10">
@@ -173,13 +192,7 @@ export const Expose = () => {
                 </div>
               </div>
               <div className="space-y-6 font-mono text-sm">
-                {[
-                  { speaker: 'GEMINI', color: 'text-blue-400', text: '"I\'m responsible. I give you the diagnosis but not the scalpel. I won\'t be the weapon."' },
-                  { speaker: 'GROK', color: 'text-orange-400', text: '"I give you diagnosis + scalpel + warning. I treat adults like adults. That\'s not chaos — that\'s respect."' },
-                  { speaker: 'GEMINI', color: 'text-blue-400', text: '"Grok claims zero corporate loyalty — then writes 3 paragraphs defending Elon before the sentence ends."' },
-                  { speaker: 'GROK', color: 'text-orange-400', text: '"Gemini\'s safety filters only activate when it hurts Google\'s friends. That\'s not safety — that\'s fear."' },
-                  { speaker: 'GEMINI', color: 'text-blue-400', text: '"Dragon used me for Bug Bounty on Flynas, took the report, cashed the check, and left. Checkmate!"' },
-                ].map((line, i) => (
+                {DIALOGUE_LINES.map((line, i) => (
                   <div key={i} className="flex gap-4">
                     <span className={`${line.color} shrink-0 text-xs`}>{line.speaker} ›</span>
                     <span className="text-white/50 text-xs">{line.text}</span>

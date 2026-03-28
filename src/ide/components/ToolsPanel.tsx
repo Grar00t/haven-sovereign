@@ -4,7 +4,9 @@
 // Zero cloud. Full sovereignty. Maximum drip.
 // ══════════════════════════════════════════════════════════════
 
-import React, { useState, lazy, Suspense, type ReactNode } from 'react';
+import React, {
+  useState, lazy, Suspense, type ReactNode, Component, type ErrorInfo,
+} from 'react';
 import { useIDEStore } from '../useIDEStore';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -65,6 +67,57 @@ const LoadingFallback = () => (
     </div>
   </div>
 );
+
+class ToolPanelErrorBoundary extends Component<
+{ children: ReactNode; activeTab: string },
+{ hasError: boolean; errorMessage: string }
+> {
+  constructor(props: { children: ReactNode; activeTab: string }) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return {
+      hasError: true,
+      errorMessage: error.message || 'Unknown panel failure',
+    };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error(`[ToolsPanel] ${this.props.activeTab} crashed`, error, info);
+  }
+
+  componentDidUpdate(prevProps: { activeTab: string }) {
+    if (prevProps.activeTab !== this.props.activeTab && this.state.hasError) {
+      this.setState({ hasError: false, errorMessage: '' });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full flex items-center justify-center px-6 text-center bg-black/40">
+          <div className="space-y-3">
+            <div className="text-red-400 text-sm font-bold">Tool Panel Failed</div>
+            <p className="text-xs text-white/60 leading-relaxed">
+              The
+              {' '}
+              {this.props.activeTab}
+              {' '}
+              panel crashed before it could render.
+            </p>
+            <p className="text-[11px] text-red-300/80 font-mono break-all">
+              {this.state.errorMessage}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export const ToolsPanel = () => {
   const { currentTheme, sidebarWidth } = useIDEStore();
@@ -162,9 +215,11 @@ export const ToolsPanel = () => {
             transition={{ duration: 0.15 }}
             className="h-full"
           >
-            <Suspense fallback={<LoadingFallback />}>
-              {ActivePanel && <ActivePanel />}
-            </Suspense>
+            <ToolPanelErrorBoundary activeTab={activeTab}>
+              <Suspense fallback={<LoadingFallback />}>
+                {ActivePanel && <ActivePanel />}
+              </Suspense>
+            </ToolPanelErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </div>
